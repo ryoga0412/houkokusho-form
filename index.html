@@ -87,7 +87,7 @@
       <div id="e_segs"></div>
       <button type="button" class="add" id="e_addseg">＋ 移動を追加</button>
 
-      <span class="fl">宿泊 <em>／ 日帰りなら追加不要</em></span>
+      <span class="fl">宿泊 <em>／ 日帰りなら削除してください</em></span>
       <div id="e_stays"></div>
       <button type="button" class="add" id="e_addstay">＋ 宿泊を追加</button>
     </div>
@@ -130,7 +130,7 @@
   var mode = (q.t === 'report') ? 'report' : 'expense';
 
   var MEANS = ['飛行機', '新幹線', '在来線', '自家用車', 'バス'];
-  var PAY    = ['法人支払い', '個人支払い', '支払いなし'];
+  var PAY    = ['個人支払い', '法人支払い', '支払いなし'];   // 既定は個人支払い
   var CLS_JAL  = ['エコノミー', 'クラスJ', 'ファースト'];
   var CLS_AIR  = ['エコノミー', 'ビジネス', 'ファースト'];
   var CLS_TRAIN= ['自由席', '指定席', 'グリーン', 'グランクラス'];
@@ -170,6 +170,7 @@
     $('title').textContent = '旅費申請';
     $('expense').classList.remove('hide');
     addSeg('往路'); addSeg('復路');
+    addStay();
     $('e_addseg').onclick = function () { addSeg(''); };
     $('e_addstay').onclick = function () { addStay(); };
     $('e_from').addEventListener('change', syncSegDates);
@@ -193,8 +194,8 @@
     var mean = w.querySelector('.s-mean'), name = w.querySelector('.s-name');
     var cls = w.querySelector('.s-cls'), pay = w.querySelector('.s-pay');
     opt(mean, MEANS, '移動手段');
-    opt(pay, PAY, '支払い');
-    pay.value = '法人支払い';
+    opt(pay, PAY);
+    pay.value = '個人支払い';
 
     function refresh() {
       var m = mean.value;
@@ -239,8 +240,8 @@
       '<div class="two"><input type="date" class="h-from"><span>〜</span><input type="date" class="h-to"></div>' +
       '<select class="h-pay"></select>';
     var pay = w.querySelector('.h-pay');
-    opt(pay, PAY, '支払い');
-    pay.value = '法人支払い';
+    opt(pay, PAY);
+    pay.value = '個人支払い';
     w.querySelector('button').onclick = function () { w.remove(); };
     var f = $('e_from').value;
     if (f) w.querySelector('.h-from').value = f;

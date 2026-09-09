@@ -32,6 +32,17 @@
     linear-gradient(135deg,var(--dim) 50%,transparent 50%);
     background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;
     background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+
+  /* 日付を選ぶボタン。1回タップでカレンダーが開き、そこで期間まで決める */
+  .dfield{width:100%;border:1px solid var(--line);border-radius:9px;padding:12px 38px 12px 12px;
+          font-size:15px;font-family:inherit;color:var(--ink);background:var(--white);
+          text-align:left;line-height:1.6;cursor:pointer;position:relative;display:block}
+  .dfield.empty{color:#AEB8B1}
+  .dfield:after{content:'';position:absolute;right:14px;top:50%;width:13px;height:13px;
+    margin-top:-8px;border:1.6px solid var(--dim);border-radius:2px}
+  .dfield:before{content:'';position:absolute;right:16px;top:50%;width:9px;height:1.6px;
+    margin-top:-4px;background:var(--dim);z-index:1}
+
   .two{display:flex;gap:9px;align-items:center}
   .two>*{flex:1;min-width:0}
   .two span{flex:none;color:var(--dim);font-size:13px}
@@ -62,6 +73,36 @@
   .hint{font-size:11.5px;color:var(--dim);margin-top:9px;text-align:center}
   .msg{margin:18px;padding:14px;border-radius:10px;background:#FBEDE9;color:#8C4A3C;
        font-size:13.5px;line-height:1.8}
+
+  /* カレンダー */
+  .sheet{position:fixed;inset:0;background:rgba(20,30,25,.45);z-index:50;
+         display:flex;align-items:flex-end;justify-content:center}
+  .sheet-in{background:var(--white);width:100%;max-width:560px;
+            border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+  .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-h b{font-size:15px}
+  .cal-h button{border:none;background:var(--brand-lt);color:var(--brand);width:38px;height:38px;
+                border-radius:19px;font-size:20px;line-height:1;font-family:inherit;cursor:pointer}
+  .cal-w,.cal-g{display:grid;grid-template-columns:repeat(7,1fr)}
+  .cal-w span{text-align:center;font-size:11px;color:var(--dim);padding-bottom:4px}
+  .cal-w span:first-child{color:#C4726A}
+  .cal-w span:last-child{color:#6A86C4}
+  .cd{height:42px;display:flex;align-items:center;justify-content:center;font-size:14.5px;
+      cursor:pointer;border-radius:21px;position:relative}
+  .cd.empty{cursor:default}
+  .cd.mid{background:var(--brand-lt);border-radius:0}
+  .cd.on{background:var(--brand);color:#fff;font-weight:700}
+  .cd.on.s{border-radius:21px 0 0 21px}
+  .cd.on.e{border-radius:0 21px 21px 0}
+  .cd.on.s.e{border-radius:21px}
+  .cal-sel{text-align:center;font-size:13px;color:var(--dim);margin:12px 0 10px;min-height:22px}
+  .cal-sel b{color:var(--ink);font-size:14.5px}
+  .cal-btns{display:flex;gap:9px}
+  .cal-btns button{flex:1;border:none;border-radius:10px;padding:13px;font-size:15px;
+                   font-weight:700;font-family:inherit;cursor:pointer}
+  #cal_cancel{background:#EEF1EF;color:#56655C}
+  #cal_ok{background:var(--brand);color:#fff}
+  #cal_ok:disabled{background:#A9BFB4}
 </style>
 </head>
 <body>
@@ -77,13 +118,13 @@
 
     <!-- 旅費申請 -->
     <div id="expense" class="hide">
-      <span class="fl">出張期間</span>
-      <div class="two"><input type="date" id="e_from"><span>〜</span><input type="date" id="e_to"></div>
+      <span class="fl">出張期間 <em>／ 日帰りは同じ日をもう一度</em></span>
+      <button type="button" class="dfield empty" id="e_period">日付を選ぶ</button>
 
       <span class="fl">出張先</span>
       <input type="text" id="e_place" placeholder="大阪府 大阪市／アメリカ ラスベガス">
 
-      <span class="fl">移動 <em>／ 往路・復路をそれぞれ</em></span>
+      <span class="fl">移動 <em>／ 行きと帰りをそれぞれ</em></span>
       <div id="e_segs"></div>
       <button type="button" class="add" id="e_addseg">＋ 移動を追加</button>
 
@@ -116,6 +157,24 @@
   </main>
 </div>
 
+<!-- カレンダー（開始日と終了日を1枚で決める） -->
+<div class="sheet hide" id="cal">
+  <div class="sheet-in">
+    <div class="cal-h">
+      <button type="button" id="cal_prev">‹</button>
+      <b id="cal_title"></b>
+      <button type="button" id="cal_next">›</button>
+    </div>
+    <div class="cal-w"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+    <div class="cal-g" id="cal_g"></div>
+    <div class="cal-sel" id="cal_sel"></div>
+    <div class="cal-btns">
+      <button type="button" id="cal_cancel">やめる</button>
+      <button type="button" id="cal_ok">決定</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 (function () {
@@ -134,9 +193,12 @@
   var CLS_JAL  = ['エコノミー', 'クラスJ', 'ファースト'];
   var CLS_AIR  = ['エコノミー', 'ビジネス', 'ファースト'];
   var CLS_TRAIN= ['自由席', '指定席', 'グリーン', 'グランクラス'];
+  var MARU = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).trim(); };
+  var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+  var maru = function (i) { return i < MARU.length ? MARU.charAt(i) : String(i + 1); };
 
   function opt(sel, list, ph) {
     sel.innerHTML = '';
@@ -159,32 +221,144 @@
     var d = new Date(from), e = new Date(to || from);
     if (isNaN(d) || isNaN(e) || e < d) return [from];
     for (var i = 0; i < 62 && d <= e; i++) {
-      out.push(d.toISOString().slice(0, 10));
+      out.push(d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()));
       d.setDate(d.getDate() + 1);
     }
     return out;
+  }
+
+  /* ============ カレンダー（期間を1枚で選ぶ） ============ */
+  var cal = { field: null, kind: 'trip', from: '', to: '', cur: new Date() };
+
+  function fieldText(el) {
+    var f = el.getAttribute('data-from'), t = el.getAttribute('data-to');
+    el.classList.toggle('empty', !f);
+    if (!f) { el.textContent = el.getAttribute('data-ph') || '日付を選ぶ'; return; }
+    if (!t || t === f) el.textContent = jp(f) + (el.getAttribute('data-kind') === 'trip' ? '（日帰り）' : '');
+    else el.textContent = jp(f) + ' 〜 ' + jp(t);
+  }
+
+  function openCal(el) {
+    cal.field = el;
+    cal.kind  = el.getAttribute('data-kind') || 'trip';
+    cal.from  = el.getAttribute('data-from') || '';
+    cal.to    = el.getAttribute('data-to') || '';
+    cal.cur   = cal.from ? new Date(cal.from) : new Date();
+    cal.cur.setDate(1);
+    drawCal();
+    $('cal').classList.remove('hide');
+  }
+
+  function drawCal() {
+    var y = cal.cur.getFullYear(), mo = cal.cur.getMonth();
+    $('cal_title').textContent = y + '年' + (mo + 1) + '月';
+
+    var head = new Date(y, mo, 1).getDay();
+    var last = new Date(y, mo + 1, 0).getDate();
+    var g = $('cal_g');
+    g.innerHTML = '';
+
+    for (var i = 0; i < head; i++) {
+      var b = document.createElement('div');
+      b.className = 'cd empty';
+      g.appendChild(b);
+    }
+    for (var d = 1; d <= last; d++) {
+      var iso = y + '-' + p2(mo + 1) + '-' + p2(d);
+      var c = document.createElement('div');
+      c.className = 'cd';
+      c.textContent = d;
+      c.setAttribute('data-iso', iso);
+      if (cal.from && cal.to) {
+        if (iso === cal.from) c.className = 'cd on s' + (cal.from === cal.to ? ' e' : '');
+        else if (iso === cal.to) c.className = 'cd on e';
+        else if (iso > cal.from && iso < cal.to) c.className = 'cd mid';
+      } else if (iso === cal.from) {
+        c.className = 'cd on s e';
+      }
+      c.onclick = pickDay;
+      g.appendChild(c);
+    }
+    drawCalFoot();
+  }
+
+  function drawCalFoot() {
+    var s = $('cal_sel');
+    if (!cal.from) {
+      s.innerHTML = '開始日を選んでください';
+    } else if (!cal.to) {
+      s.innerHTML = '<b>' + jp(cal.from) + '</b> 〜 ' +
+        (cal.kind === 'trip' ? '最終日を選んでください（日帰りなら同じ日をもう一度）'
+                             : 'チェックアウト日を選んでください');
+    } else if (cal.from === cal.to) {
+      s.innerHTML = '<b>' + jp(cal.from) + '</b>' + (cal.kind === 'trip' ? '（日帰り）' : '');
+    } else {
+      s.innerHTML = '<b>' + jp(cal.from) + ' 〜 ' + jp(cal.to) + '</b>';
+    }
+    $('cal_ok').disabled = !cal.from;
+  }
+
+  function pickDay() {
+    var iso = this.getAttribute('data-iso');
+    if (!cal.from || (cal.from && cal.to)) { cal.from = iso; cal.to = ''; }
+    else if (iso < cal.from) { cal.from = iso; cal.to = ''; }
+    else { cal.to = iso; }
+    drawCal();
+  }
+
+  function setupCal() {
+    $('cal_prev').onclick = function () { cal.cur.setMonth(cal.cur.getMonth() - 1); drawCal(); };
+    $('cal_next').onclick = function () { cal.cur.setMonth(cal.cur.getMonth() + 1); drawCal(); };
+    $('cal_cancel').onclick = function () { $('cal').classList.add('hide'); };
+    $('cal').onclick = function (e) { if (e.target === $('cal')) $('cal').classList.add('hide'); };
+    $('cal_ok').onclick = function () {
+      if (!cal.from) return;
+      cal.field.setAttribute('data-from', cal.from);
+      cal.field.setAttribute('data-to', cal.to || cal.from);
+      fieldText(cal.field);
+      $('cal').classList.add('hide');
+      if (cal.field.id === 'e_period') syncDates();
+    };
+  }
+
+  function bindField(el, kind, ph) {
+    el.setAttribute('data-kind', kind);
+    el.setAttribute('data-ph', ph);
+    el.onclick = function () { openCal(el); };
+    fieldText(el);
+  }
+
+  function tripRange() {
+    var el = $('e_period');
+    var f = el.getAttribute('data-from') || '';
+    return { from: f, to: el.getAttribute('data-to') || f };
   }
 
   /* ============ 旅費申請 ============ */
   function buildExpense() {
     $('title').textContent = '旅費申請';
     $('expense').classList.remove('hide');
-    addSeg('往路'); addSeg('復路');
+    bindField($('e_period'), 'trip', '日付を選ぶ');
+    addSeg(); addSeg();
     addStay();
-    $('e_addseg').onclick = function () { addSeg(''); };
+    $('e_addseg').onclick = function () { addSeg(); };
     $('e_addstay').onclick = function () { addStay(); };
-    $('e_from').addEventListener('change', syncSegDates);
-    $('e_to').addEventListener('change', syncSegDates);
   }
 
-  function addSeg(label) {
-    var n = $('e_segs').children.length + 1;
+  function renumber(box, word) {
+    Array.prototype.forEach.call(box.children, function (w, i) {
+      w.querySelector('.card-h b').textContent = word + maru(i);
+      w.setAttribute('data-idx', i);
+    });
+  }
+
+  function addSeg() {
     var w = document.createElement('div');
     w.className = 'card';
-    w.setAttribute('data-role', label || '');
     w.innerHTML =
-      '<div class="card-h"><b>' + (label || ('移動 ' + n)) + '</b><button type="button">削除</button></div>' +
-      '<div class="two"><select class="s-mean"></select><input type="date" class="s-date"></div>' +
+      '<div class="card-h"><b></b><button type="button">削除</button></div>' +
+      '<div class="two"><select class="s-mean"></select>' +
+      '<button type="button" class="dfield empty s-date"></button></div>' +
       '<div class="two"><input type="text" class="s-from" placeholder="発（東京・羽田）">' +
       '<span>→</span><input type="text" class="s-to" placeholder="着（大阪・伊丹）"></div>' +
       '<input type="text" class="s-name" placeholder="便名・列車名（JAL031／のぞみ）">' +
@@ -196,6 +370,7 @@
     opt(mean, MEANS, '移動手段');
     opt(pay, PAY);
     pay.value = '個人支払い';
+    bindField(w.querySelector('.s-date'), 'one', '利用日');
 
     function refresh() {
       var m = mean.value;
@@ -213,49 +388,69 @@
     name.addEventListener('input', refresh);
     refresh();
 
-    w.querySelector('button').onclick = function () { w.remove(); };
+    w.querySelector('.card-h button').onclick = function () {
+      w.remove();
+      renumber($('e_segs'), '移動');
+    };
     $('e_segs').appendChild(w);
-    syncSegDates();
-  }
-
-  /* 出張期間を選んだら、往路は初日・復路は最終日を利用日の初期値にする */
-  function syncSegDates() {
-    var f = $('e_from').value, t = $('e_to').value || f;
-    Array.prototype.forEach.call($('e_segs').children, function (w) {
-      var d = w.querySelector('.s-date');
-      if (d.value) return;
-      var role = w.getAttribute('data-role');
-      if (role === '往路' && f) d.value = f;
-      else if (role === '復路' && t) d.value = t;
-    });
+    renumber($('e_segs'), '移動');
+    syncDates();
   }
 
   function addStay() {
-    var n = $('e_stays').children.length + 1;
     var w = document.createElement('div');
     w.className = 'card';
     w.innerHTML =
-      '<div class="card-h"><b>宿泊 ' + n + '</b><button type="button">削除</button></div>' +
+      '<div class="card-h"><b></b><button type="button">削除</button></div>' +
       '<input type="text" class="h-name" placeholder="ホテル名">' +
-      '<div class="two"><input type="date" class="h-from"><span>〜</span><input type="date" class="h-to"></div>' +
+      '<button type="button" class="dfield empty h-period"></button>' +
       '<select class="h-pay"></select>';
     var pay = w.querySelector('.h-pay');
     opt(pay, PAY);
     pay.value = '個人支払い';
-    w.querySelector('button').onclick = function () { w.remove(); };
-    var f = $('e_from').value;
-    if (f) w.querySelector('.h-from').value = f;
+    bindField(w.querySelector('.h-period'), 'stay', '宿泊期間を選ぶ');
+    w.querySelector('.card-h button').onclick = function () {
+      w.remove();
+      renumber($('e_stays'), '宿泊');
+    };
     $('e_stays').appendChild(w);
+    renumber($('e_stays'), '宿泊');
+    syncDates();
+  }
+
+  /* 出張期間を決めたら、空いているところに初期値を入れる。手で直せる */
+  function syncDates() {
+    var r = tripRange();
+    if (!r.from) return;
+
+    var segs = $('e_segs').children;
+    Array.prototype.forEach.call(segs, function (w, i) {
+      var d = w.querySelector('.s-date');
+      if (d.getAttribute('data-from')) return;
+      var iso = (i === 0) ? r.from : (i === 1 ? r.to : '');
+      if (!iso) return;
+      d.setAttribute('data-from', iso);
+      d.setAttribute('data-to', iso);
+      fieldText(d);
+    });
+
+    Array.prototype.forEach.call($('e_stays').children, function (w) {
+      var d = w.querySelector('.h-period');
+      if (d.getAttribute('data-from')) return;
+      d.setAttribute('data-from', r.from);
+      d.setAttribute('data-to', r.to);
+      fieldText(d);
+    });
   }
 
   function expenseText() {
-    var from = $('e_from').value, to = $('e_to').value;
-    if (!from) return { err: '出張期間の開始日を選んでください。' };
+    var r = tripRange();
+    if (!r.from) return { err: '出張期間を選んでください。' };
     var place = esc($('e_place').value);
     if (!place) return { err: '出張先をご記入ください。' };
 
     var L = ['【旅費申請】'];
-    L.push('出張期間：' + (!to || to === from ? jp(from) + '（日帰り）' : jp(from) + '〜' + jp(to)));
+    L.push('出張期間：' + (r.to === r.from ? jp(r.from) + '（日帰り）' : jp(r.from) + '〜' + jp(r.to)));
     L.push('出張先：' + place);
 
     var segs = [];
@@ -263,7 +458,7 @@
       var m = w.querySelector('.s-mean').value;
       var a = esc(w.querySelector('.s-from').value);
       var b = esc(w.querySelector('.s-to').value);
-      var dv = w.querySelector('.s-date').value;
+      var dv = w.querySelector('.s-date').getAttribute('data-from') || '';
       if (!m && !a && !b) return;
       var t = (dv ? jp(dv) + ' ' : '') + (m || '移動') + ' ' + (a || '？') + '→' + (b || '？');
       var nm = esc(w.querySelector('.s-name').value);
@@ -282,7 +477,8 @@
     Array.prototype.forEach.call($('e_stays').children, function (w) {
       var nm = esc(w.querySelector('.h-name').value);
       if (!nm) return;
-      var f = w.querySelector('.h-from').value, t2 = w.querySelector('.h-to').value;
+      var d = w.querySelector('.h-period');
+      var f = d.getAttribute('data-from') || '', t2 = d.getAttribute('data-to') || '';
       var s = nm;
       if (f) s += '（' + jp(f) + (t2 && t2 !== f ? '〜' + jp(t2) : '') + '）';
       var pv = w.querySelector('.h-pay').value;
@@ -367,6 +563,7 @@
   /* ============ 起動 ============ */
   liff.init({ liffId: LIFF_ID }).then(function () {
     if (!liff.isInClient()) { show('このページはLINEアプリの中で開いてください。'); return; }
+    setupCal();
     if (mode === 'report') buildReport(); else buildExpense();
     $('form').classList.remove('hide');
 

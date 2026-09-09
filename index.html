@@ -6,69 +6,62 @@
 <title>報告書作成くん</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
-  :root{
-    --brand:#0E6B4C; --brand-lt:#E4F1EA; --ink:#1B2320; --dim:#8A9790;
-    --line:#E4E9E5; --bg:#F7F8F6; --white:#fff;
-  }
+  :root{--brand:#0E6B4C;--brand-lt:#E4F1EA;--ink:#1B2320;--dim:#8A9790;
+        --line:#E4E9E5;--bg:#F7F8F6;--white:#fff}
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-       background:var(--bg);color:var(--ink);font-size:15px;line-height:1.7;
-       padding-bottom:env(safe-area-inset-bottom)}
-  .wrap{max-width:560px;margin:0 auto;padding:0 0 32px}
+       background:var(--bg);color:var(--ink);font-size:15px;line-height:1.7}
+  .wrap{max-width:560px;margin:0 auto;padding-bottom:36px}
   header{background:var(--white);border-bottom:1px solid var(--line);padding:14px 18px}
   header h1{font-size:17px;font-weight:700}
   .ctx{background:var(--brand-lt);padding:11px 18px}
   .ctx .k{font-size:10px;font-weight:700;color:var(--brand);letter-spacing:.08em}
   .ctx .v{font-size:14px;margin-top:2px}
   main{padding:18px}
-  label.fl{display:block;font-size:12px;font-weight:700;color:var(--dim);
-           margin:20px 0 7px;letter-spacing:.04em}
-  label.fl:first-child{margin-top:0}
-  label.fl em{font-style:normal;font-weight:500;color:#B4BEB7}
+  .fl{display:block;font-size:12px;font-weight:700;color:var(--dim);margin:22px 0 7px;letter-spacing:.04em}
+  .fl:first-child{margin-top:0}
+  .fl em{font-style:normal;font-weight:500;color:#B4BEB7}
   input[type=text],input[type=date],textarea,select{
-    width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;
-    font-size:15px;font-family:inherit;color:var(--ink);background:var(--white);
-    line-height:1.6;-webkit-appearance:none;appearance:none}
-  textarea{min-height:82px;resize:vertical}
+    width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:15px;
+    font-family:inherit;color:var(--ink);background:var(--white);line-height:1.6;
+    -webkit-appearance:none;appearance:none}
+  textarea{min-height:84px;resize:vertical}
   input::placeholder,textarea::placeholder{color:#AEB8B1}
   input:focus,textarea:focus,select:focus{outline:2px solid var(--brand);outline-offset:-2px}
   select{background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),
-         linear-gradient(135deg,var(--dim) 50%,transparent 50%);
-         background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;
-         background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+    linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat}
   .two{display:flex;gap:9px;align-items:center}
-  .two input{flex:1;min-width:0}
-  .two span{color:var(--dim);font-size:13px;flex:none}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{border:1px solid var(--line);background:var(--white);border-radius:999px;
-        padding:9px 16px;font-size:13.5px;color:#56655C;cursor:pointer;user-select:none}
-  .chip.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
-  .day{border:1px solid var(--line);border-radius:9px;overflow:hidden;
-       margin-bottom:9px;background:var(--white)}
-  .day-h{background:#F5F8F6;border-bottom:1px solid var(--line);
-         padding:8px 12px;font-size:12.5px;font-weight:700;color:var(--brand)}
-  .day textarea{border:none;border-radius:0;min-height:74px}
-  .day textarea:focus{outline-offset:-2px}
-  .seg{border:1px solid var(--line);border-radius:9px;background:var(--white);
-       padding:11px;margin-bottom:9px}
-  .seg-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .seg-h b{font-size:12px;color:var(--dim)}
-  .seg-h button{background:none;border:none;color:#B26B5E;font-size:12px;
-                font-family:inherit;cursor:pointer;padding:2px 4px}
-  .seg .row{display:flex;gap:8px}
-  .seg .row input{flex:3;min-width:0}
-  .seg .row select{flex:2;min-width:0}
+  .two>*{flex:1;min-width:0}
+  .two span{flex:none;color:var(--dim);font-size:13px}
+  .card{border:1px solid var(--line);border-radius:10px;background:var(--white);
+        padding:12px;margin-bottom:10px}
+  .card-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+  .card-h b{font-size:12px;color:var(--dim);font-weight:700}
+  .card-h button{background:none;border:none;color:#B26B5E;font-size:12px;
+                 font-family:inherit;cursor:pointer;padding:2px 4px}
+  .card>*+*{margin-top:8px}
   .add{border:1px dashed #BFD8CB;color:var(--brand);border-radius:9px;padding:11px;
        text-align:center;font-size:13px;font-weight:700;background:none;width:100%;
        font-family:inherit;cursor:pointer}
+  .seg2{display:flex;background:var(--white);border:1px solid var(--line);
+        border-radius:9px;overflow:hidden}
+  .seg2 div{flex:1;text-align:center;padding:11px 6px;font-size:13.5px;
+            color:#56655C;cursor:pointer;user-select:none}
+  .seg2 div.on{background:var(--brand);color:#fff;font-weight:700}
+  .day{border:1px solid var(--line);border-radius:9px;overflow:hidden;
+       margin-bottom:9px;background:var(--white)}
+  .day-h{background:#F5F8F6;border-bottom:1px solid var(--line);padding:8px 12px;
+         font-size:12.5px;font-weight:700;color:var(--brand)}
+  .day textarea{border:none;border-radius:0;min-height:76px}
   .hide{display:none !important}
   .submit{width:100%;background:var(--brand);color:#fff;border:none;border-radius:10px;
-          padding:15px;font-size:16px;font-weight:700;font-family:inherit;
-          margin-top:26px;cursor:pointer}
+          padding:15px;font-size:16px;font-weight:700;font-family:inherit;margin-top:28px;cursor:pointer}
   .submit:disabled{background:#A9BFB4}
   .hint{font-size:11.5px;color:var(--dim);margin-top:9px;text-align:center}
-  .msg{margin:18px;padding:14px;border-radius:10px;background:#FBEDE9;
-       color:#8C4A3C;font-size:13.5px;line-height:1.8}
+  .msg{margin:18px;padding:14px;border-radius:10px;background:#FBEDE9;color:#8C4A3C;
+       font-size:13.5px;line-height:1.8}
 </style>
 </head>
 <body>
@@ -78,51 +71,43 @@
     <div class="k">旅費申請でお預かりした出張</div>
     <div class="v" id="ctxv"></div>
   </div>
-
   <div class="msg hide" id="msg"></div>
 
   <main class="hide" id="form">
 
-    <!-- ===== 旅費申請 ===== -->
+    <!-- 旅費申請 -->
     <div id="expense" class="hide">
-      <label class="fl">出張期間</label>
-      <div class="two">
-        <input type="date" id="e_from"><span>〜</span><input type="date" id="e_to">
-      </div>
+      <span class="fl">出張期間</span>
+      <div class="two"><input type="date" id="e_from"><span>〜</span><input type="date" id="e_to"></div>
 
-      <label class="fl">出張先</label>
-      <select id="e_place"></select>
-      <input type="text" id="e_city" placeholder="市区町村・都市名（任意）" style="margin-top:8px">
+      <span class="fl">出張先</span>
+      <input type="text" id="e_place" placeholder="大阪府 大阪市／アメリカ ラスベガス">
 
-      <label class="fl">移動手段</label>
-      <div class="chips" id="e_means"></div>
+      <span class="fl">移動 <em>／ 往路・復路をそれぞれ</em></span>
+      <div id="e_segs"></div>
+      <button type="button" class="add" id="e_addseg">＋ 移動を追加</button>
 
-      <div id="e_segwrap" class="hide">
-        <label class="fl">区間 <em>／ 往路・復路をそれぞれ</em></label>
-        <div id="e_segs"></div>
-        <button type="button" class="add" id="e_addseg">＋ 区間を追加</button>
-      </div>
-
-      <label class="fl">宿泊先 <em>／ 日帰りなら空欄</em></label>
-      <input type="text" id="e_hotel" placeholder="ホテル名">
-
-      <label class="fl">精算について</label>
-      <div class="chips" id="e_settle"></div>
+      <span class="fl">宿泊 <em>／ 日帰りなら追加不要</em></span>
+      <div id="e_stays"></div>
+      <button type="button" class="add" id="e_addstay">＋ 宿泊を追加</button>
     </div>
 
-    <!-- ===== 出張報告 ===== -->
+    <!-- 出張報告 -->
     <div id="report" class="hide">
-      <label class="fl">目的 <em>／ 空欄でも構いません</em></label>
+      <span class="fl">書き方</span>
+      <div class="seg2" id="r_mode">
+        <div class="on" data-v="day">日ごとに報告</div>
+        <div data-v="all">まとめて報告</div>
+      </div>
+
+      <span class="fl">目的 <em>／ 空欄でも構いません</em></span>
       <input type="text" id="r_purpose" placeholder="未入力の場合は下の内容から作成します">
 
-      <label class="fl">日ごとの出張内容</label>
+      <span class="fl" id="r_bodylabel">日ごとの出張内容</span>
       <div id="r_days"></div>
+      <textarea id="r_all" class="hide" placeholder="出張中にされたことを、まとめて書いてください"></textarea>
 
-      <label class="fl">訪問先・お会いした方 <em>／ 任意</em></label>
-      <div id="r_visits"></div>
-      <button type="button" class="add" id="r_addvisit">＋ 訪問先を追加</button>
-
-      <label class="fl">決まったこと・成果</label>
+      <span class="fl">決まったこと・成果</span>
       <textarea id="r_result" placeholder="単価改定は4月から／見積りは今月中に受領　など"></textarea>
     </div>
 
@@ -144,29 +129,28 @@
   });
   var mode = (q.t === 'report') ? 'report' : 'expense';
 
-  var PREF = ['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県',
-    '埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県',
-    '岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県',
-    '鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県',
-    '佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県','海外'];
-
-  var MEANS = ['飛行機','新幹線','在来線','自家用車','レンタカー','タクシー','バス'];
-  var CLASS_AIR_JAL = ['エコノミー','クラスJ','ファースト'];
-  var CLASS_AIR_OTH = ['エコノミー','ビジネス','ファースト'];
-  var CLASS_TRAIN   = ['自由席','指定席','グリーン','グランクラス'];
+  var MEANS = ['飛行機', '新幹線', '在来線', '自家用車', 'バス'];
+  var PAY    = ['法人支払い', '個人支払い', '支払いなし'];
+  var CLS_JAL  = ['エコノミー', 'クラスJ', 'ファースト'];
+  var CLS_AIR  = ['エコノミー', 'ビジネス', 'ファースト'];
+  var CLS_TRAIN= ['自由席', '指定席', 'グリーン', 'グランクラス'];
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).trim(); };
 
+  function opt(sel, list, ph) {
+    sel.innerHTML = '';
+    if (ph) sel.appendChild(new Option(ph, ''));
+    list.forEach(function (t) { sel.appendChild(new Option(t, t)); });
+  }
   function jp(iso) {
     var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) return '';
-    return m[1] + '年' + Number(m[2]) + '月' + Number(m[3]) + '日';
+    return m ? m[1] + '年' + Number(m[2]) + '月' + Number(m[3]) + '日' : '';
   }
   function md(iso) {
     var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!m) return '';
-    var w = ['日','月','火','水','木','金','土'][new Date(m[1], m[2] - 1, m[3]).getDay()];
+    var w = ['日','月','火','水','木','金','土'][new Date(m[1], m[2]-1, m[3]).getDay()];
     return Number(m[2]) + '月' + Number(m[3]) + '日（' + w + '）';
   }
   function days(from, to) {
@@ -181,87 +165,138 @@
     return out;
   }
 
-  /* ---------- 旅費申請 ---------- */
+  /* ============ 旅費申請 ============ */
   function buildExpense() {
     $('title').textContent = '旅費申請';
     $('expense').classList.remove('hide');
-
-    var sel = $('e_place');
-    sel.appendChild(new Option('選択してください', ''));
-    PREF.forEach(function (p) { sel.appendChild(new Option(p, p)); });
-
-    chips($('e_means'), MEANS, true, function () {
-      var on = picked($('e_means'));
-      var needSeg = on.indexOf('飛行機') >= 0 || on.indexOf('新幹線') >= 0;
-      $('e_segwrap').classList.toggle('hide', !needSeg);
-      if (needSeg && !$('e_segs').children.length) { addSeg('往路'); addSeg('復路'); }
-    });
-
-    chips($('e_settle'), ['通常どおり精算する','移動の精算は不要','宿泊の精算は不要'], true);
-
+    addSeg('往路'); addSeg('復路');
     $('e_addseg').onclick = function () { addSeg(''); };
+    $('e_addstay').onclick = function () { addStay(); };
+    $('e_from').addEventListener('change', syncSegDates);
+    $('e_to').addEventListener('change', syncSegDates);
   }
 
   function addSeg(label) {
-    var wrap = document.createElement('div');
-    wrap.className = 'seg';
     var n = $('e_segs').children.length + 1;
-    wrap.innerHTML =
-      '<div class="seg-h"><b>' + (label || ('区間 ' + n)) + '</b>' +
-      '<button type="button">削除</button></div>' +
-      '<div class="row"><input type="text" placeholder="便名・列車名（JAL031／のぞみ）">' +
-      '<select></select></div>';
-    var sel = wrap.querySelector('select');
-    var inp = wrap.querySelector('input');
-    function fill() {
-      var v = inp.value.toUpperCase();
-      var list = /^(JL|JAL)/.test(v) ? CLASS_AIR_JAL
-               : /(のぞみ|ひかり|こだま|みずほ|さくら|つばめ|はやぶさ|こまち|やまびこ|かがやき|はくたか|あさま|とき)/.test(inp.value) ? CLASS_TRAIN
-               : CLASS_AIR_OTH;
-      var cur = sel.value;
-      sel.innerHTML = '';
-      sel.appendChild(new Option('座席クラス', ''));
-      list.forEach(function (c) { sel.appendChild(new Option(c, c)); });
-      if (cur) sel.value = cur;
+    var w = document.createElement('div');
+    w.className = 'card';
+    w.setAttribute('data-role', label || '');
+    w.innerHTML =
+      '<div class="card-h"><b>' + (label || ('移動 ' + n)) + '</b><button type="button">削除</button></div>' +
+      '<div class="two"><select class="s-mean"></select><input type="date" class="s-date"></div>' +
+      '<div class="two"><input type="text" class="s-from" placeholder="発（東京・羽田）">' +
+      '<span>→</span><input type="text" class="s-to" placeholder="着（大阪・伊丹）"></div>' +
+      '<input type="text" class="s-name" placeholder="便名・列車名（JAL031／のぞみ）">' +
+      '<select class="s-cls"></select>' +
+      '<select class="s-pay"></select>';
+
+    var mean = w.querySelector('.s-mean'), name = w.querySelector('.s-name');
+    var cls = w.querySelector('.s-cls'), pay = w.querySelector('.s-pay');
+    opt(mean, MEANS, '移動手段');
+    opt(pay, PAY, '支払い');
+    pay.value = '法人支払い';
+
+    function refresh() {
+      var m = mean.value;
+      var need = (m === '飛行機' || m === '新幹線');
+      name.classList.toggle('hide', !need);
+      cls.classList.toggle('hide', !need);
+      if (!need) { name.value = ''; cls.value = ''; return; }
+      var list = (m === '新幹線') ? CLS_TRAIN
+               : /^(JL|JAL)/i.test(name.value) ? CLS_JAL : CLS_AIR;
+      var cur = cls.value;
+      opt(cls, list, '座席クラス');
+      if (cur) cls.value = cur;
     }
-    inp.addEventListener('input', fill);
-    fill();
-    wrap.querySelector('button').onclick = function () { wrap.remove(); };
-    $('e_segs').appendChild(wrap);
+    mean.addEventListener('change', refresh);
+    name.addEventListener('input', refresh);
+    refresh();
+
+    w.querySelector('button').onclick = function () { w.remove(); };
+    $('e_segs').appendChild(w);
+    syncSegDates();
+  }
+
+  /* 出張期間を選んだら、往路は初日・復路は最終日を利用日の初期値にする */
+  function syncSegDates() {
+    var f = $('e_from').value, t = $('e_to').value || f;
+    Array.prototype.forEach.call($('e_segs').children, function (w) {
+      var d = w.querySelector('.s-date');
+      if (d.value) return;
+      var role = w.getAttribute('data-role');
+      if (role === '往路' && f) d.value = f;
+      else if (role === '復路' && t) d.value = t;
+    });
+  }
+
+  function addStay() {
+    var n = $('e_stays').children.length + 1;
+    var w = document.createElement('div');
+    w.className = 'card';
+    w.innerHTML =
+      '<div class="card-h"><b>宿泊 ' + n + '</b><button type="button">削除</button></div>' +
+      '<input type="text" class="h-name" placeholder="ホテル名">' +
+      '<div class="two"><input type="date" class="h-from"><span>〜</span><input type="date" class="h-to"></div>' +
+      '<select class="h-pay"></select>';
+    var pay = w.querySelector('.h-pay');
+    opt(pay, PAY, '支払い');
+    pay.value = '法人支払い';
+    w.querySelector('button').onclick = function () { w.remove(); };
+    var f = $('e_from').value;
+    if (f) w.querySelector('.h-from').value = f;
+    $('e_stays').appendChild(w);
   }
 
   function expenseText() {
     var from = $('e_from').value, to = $('e_to').value;
     if (!from) return { err: '出張期間の開始日を選んでください。' };
-    var place = $('e_place').value;
-    if (!place) return { err: '出張先を選んでください。' };
-    var city = esc($('e_city').value);
+    var place = esc($('e_place').value);
+    if (!place) return { err: '出張先をご記入ください。' };
 
     var L = ['【旅費申請】'];
     L.push('出張期間：' + (!to || to === from ? jp(from) + '（日帰り）' : jp(from) + '〜' + jp(to)));
-    L.push('出張先：' + place + (city ? ' ' + city : ''));
-
-    var means = picked($('e_means'));
-    L.push('移動手段：' + (means.length ? means.join('・') : '未記入'));
+    L.push('出張先：' + place);
 
     var segs = [];
     Array.prototype.forEach.call($('e_segs').children, function (w) {
-      var name = esc(w.querySelector('input').value);
-      var cls  = w.querySelector('select').value;
-      if (name) segs.push(name + (cls ? '（' + cls + '）' : ''));
+      var m = w.querySelector('.s-mean').value;
+      var a = esc(w.querySelector('.s-from').value);
+      var b = esc(w.querySelector('.s-to').value);
+      var dv = w.querySelector('.s-date').value;
+      if (!m && !a && !b) return;
+      var t = (dv ? jp(dv) + ' ' : '') + (m || '移動') + ' ' + (a || '？') + '→' + (b || '？');
+      var nm = esc(w.querySelector('.s-name').value);
+      var cl = w.querySelector('.s-cls').value;
+      if (nm) t += ' ' + nm;
+      if (cl) t += '（' + cl + '）';
+      var pv = w.querySelector('.s-pay').value;
+      if (pv) t += ' ／ ' + pv;
+      segs.push(t);
     });
-    if (segs.length) L.push('区間：' + segs.join('／'));
+    if (!segs.length) return { err: '移動を1つ以上ご記入ください。' };
+    L.push('移動：');
+    segs.forEach(function (s) { L.push('・' + s); });
 
-    var hotel = esc($('e_hotel').value);
-    L.push('宿泊先：' + (hotel || 'なし（日帰り）'));
-
-    var st = picked($('e_settle')).filter(function (s) { return s !== '通常どおり精算する'; });
-    if (st.length) L.push('精算：' + st.join('・'));
+    var stays = [];
+    Array.prototype.forEach.call($('e_stays').children, function (w) {
+      var nm = esc(w.querySelector('.h-name').value);
+      if (!nm) return;
+      var f = w.querySelector('.h-from').value, t2 = w.querySelector('.h-to').value;
+      var s = nm;
+      if (f) s += '（' + jp(f) + (t2 && t2 !== f ? '〜' + jp(t2) : '') + '）';
+      var pv = w.querySelector('.h-pay').value;
+      if (pv) s += ' ／ ' + pv;
+      stays.push(s);
+    });
+    if (stays.length) { L.push('宿泊先：'); stays.forEach(function (s) { L.push('・' + s); }); }
+    else L.push('宿泊先：なし（日帰り）');
 
     return { text: L.join('\n') };
   }
 
-  /* ---------- 出張報告 ---------- */
+  /* ============ 出張報告 ============ */
+  var rMode = 'day';
+
   function buildReport() {
     $('title').textContent = '出張報告';
 
@@ -269,7 +304,7 @@
     if (from || place) {
       $('ctx').classList.remove('hide');
       $('ctxv').textContent =
-        (from ? (jp(from) + (to && to !== from ? '〜' + jp(to) : '')) : '') +
+        (from ? jp(from) + (to && to !== from ? '〜' + jp(to) : '') : '') +
         (place ? '　' + place : '');
     }
 
@@ -284,17 +319,19 @@
       $('r_days').appendChild(box);
     });
 
-    addVisit();
-    $('r_addvisit').onclick = function () { addVisit(); };
-    $('report').classList.remove('hide');
-  }
+    Array.prototype.forEach.call($('r_mode').children, function (b) {
+      b.onclick = function () {
+        Array.prototype.forEach.call($('r_mode').children, function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+        rMode = b.getAttribute('data-v');
+        var day = (rMode === 'day');
+        $('r_days').classList.toggle('hide', !day);
+        $('r_all').classList.toggle('hide', day);
+        $('r_bodylabel').textContent = day ? '日ごとの出張内容' : '出張内容';
+      };
+    });
 
-  function addVisit() {
-    var i = document.createElement('input');
-    i.type = 'text';
-    i.placeholder = '株式会社〇〇　購買部 田中様';
-    i.style.marginBottom = '8px';
-    $('r_visits').appendChild(i);
+    $('report').classList.remove('hide');
   }
 
   function reportText() {
@@ -302,23 +339,21 @@
     var pur = esc($('r_purpose').value);
     if (pur) L.push('目的：' + pur);
 
-    var any = false, body = [];
-    Array.prototype.forEach.call($('r_days').children, function (box) {
-      var t = esc(box.querySelector('textarea').value);
-      if (!t) return;
-      any = true;
-      var d = box.getAttribute('data-d');
-      body.push(d ? '【' + d + '】\n' + t : t);
-    });
-    if (!any) return { err: '出張内容を1日分以上ご記入ください。' };
+    var body = [];
+    if (rMode === 'day') {
+      Array.prototype.forEach.call($('r_days').children, function (box) {
+        var t = esc(box.querySelector('textarea').value);
+        if (!t) return;
+        var d = box.getAttribute('data-d');
+        body.push(d ? '【' + d + '】\n' + t : t);
+      });
+    } else {
+      var a = esc($('r_all').value);
+      if (a) body.push(a);
+    }
+    if (!body.length) return { err: '出張内容をご記入ください。' };
     L.push('出張内容：');
     L.push(body.join('\n'));
-
-    var vs = [];
-    Array.prototype.forEach.call($('r_visits').children, function (i) {
-      var v = esc(i.value); if (v) vs.push(v);
-    });
-    if (vs.length) L.push('訪問先：' + vs.join('／'));
 
     var r = esc($('r_result').value);
     if (r) L.push('成果：' + r);
@@ -326,35 +361,11 @@
     return { text: L.join('\n') };
   }
 
-  /* ---------- 共通 ---------- */
-  function chips(host, list, multi, onchange) {
-    list.forEach(function (t) {
-      var b = document.createElement('div');
-      b.className = 'chip';
-      b.textContent = t;
-      b.onclick = function () {
-        if (!multi) Array.prototype.forEach.call(host.children, function (c) { c.classList.remove('on'); });
-        b.classList.toggle('on');
-        if (onchange) onchange();
-      };
-      host.appendChild(b);
-    });
-  }
-  function picked(host) {
-    var out = [];
-    Array.prototype.forEach.call(host.children, function (c) {
-      if (c.classList.contains('on')) out.push(c.textContent);
-    });
-    return out;
-  }
   function show(t) { var m = $('msg'); m.textContent = t; m.classList.remove('hide'); }
 
-  /* ---------- 起動 ---------- */
+  /* ============ 起動 ============ */
   liff.init({ liffId: LIFF_ID }).then(function () {
-    if (!liff.isInClient()) {
-      show('このページはLINEアプリの中で開いてください。');
-      return;
-    }
+    if (!liff.isInClient()) { show('このページはLINEアプリの中で開いてください。'); return; }
     if (mode === 'report') buildReport(); else buildExpense();
     $('form').classList.remove('hide');
 
@@ -371,9 +382,7 @@
           show('送信できませんでした。もう一度お試しください。（' + e + '）');
         });
     };
-  }).catch(function (e) {
-    show('起動に失敗しました。（' + e + '）');
-  });
+  }).catch(function (e) { show('起動に失敗しました。（' + e + '）'); });
 })();
 </script>
 </body>

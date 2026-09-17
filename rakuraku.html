@@ -140,6 +140,11 @@
       <span class="fl">出張先</span>
       <input type="text" class="r-place" placeholder="大阪府 大阪市／アメリカ ラスベガス">
 
+      <div class="r-staybox hide">
+        <span class="fl">宿泊先 <em>／ 泊まりの出張のときだけ</em></span>
+        <input type="text" class="r-stay" placeholder="ホテル名（ヒルトン大阪）">
+      </div>
+
       <span class="fl">移動手段</span>
       <select class="r-mean empty">
         <option value="">選んでください</option>
@@ -275,6 +280,7 @@
       cal.field.classList.remove('bad');
       fieldText(cal.field);
       $('cal').classList.add('hide');
+      syncStay(cal.field.closest('.row'));
     };
   }
 
@@ -287,9 +293,20 @@
     var f = line.querySelector('.dfield');
     f.onclick = function () { openCal(f); };
     fieldText(f);
-    if (removable) line.querySelector('.x').onclick = function () { line.remove(); };
+    if (removable) line.querySelector('.x').onclick = function () { line.remove(); syncStay(row); };
     row.querySelector('.r-dates').appendChild(line);
     return f;
+  }
+
+  /* 開始日と終了日が別の日（泊まり）が1つでもあれば、宿泊先の欄を出す */
+  function syncStay(row) {
+    if (!row) return;
+    var overnight = false;
+    each(row.querySelectorAll('.dfield'), function (f) {
+      var a = f.getAttribute('data-from'), b = f.getAttribute('data-to');
+      if (a && b && a !== b) overnight = true;
+    });
+    row.querySelector('.r-staybox').classList.toggle('hide', !overnight);
   }
 
   function renumber() {
@@ -350,6 +367,9 @@
       var work = row.querySelector('.r-work');
       if (!val(place.value)) bad(place, no + 'の出張先をご記入ください。');
       if (!mean.value) bad(mean, no + 'の移動手段を選んでください。');
+      var stayBox = row.querySelector('.r-staybox'), stay = row.querySelector('.r-stay');
+      var needStay = !stayBox.classList.contains('hide');
+      if (needStay && !val(stay.value)) bad(stay, no + 'の宿泊先をご記入ください。');
 
       var meanTxt = mean.value;
       if (CLS[mean.value]) {
@@ -365,6 +385,7 @@
       if (dates.length === 1) L.push('出張期間：' + dates[0]);
       else { L.push('出張期間：（同じ内容で' + dates.length + '回）'); dates.forEach(function (d) { L.push('・' + d); }); }
       L.push('出張先：' + val(place.value));
+      if (needStay) L.push('宿泊先：' + val(stay.value));
       L.push('移動手段：' + meanTxt);
       L.push('仕事内容：' + val(work.value));
     });

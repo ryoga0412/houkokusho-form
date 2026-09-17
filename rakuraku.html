@@ -143,18 +143,9 @@
       <span class="fl">出張日 <em>／ 同じ内容なら複数の日を選べます</em></span>
       <button type="button" class="dfield empty r-dates"></button>
 
-      <span class="fl">移動手段</span>
-      <select class="r-mean empty">
-        <option value="">選んでください</option>
-        <option>飛行機</option>
-        <option>新幹線</option>
-        <option>在来線</option>
-        <option>車</option>
-      </select>
-      <div class="r-legbox hide">
-        <div class="r-legs"></div>
-        <button type="button" class="pill r-addleg">＋ 移動を追加</button>
-      </div>
+      <span class="fl">移動手段 <em>／ 行きと帰りで別々に選べます</em></span>
+      <div class="r-legs"></div>
+      <button type="button" class="pill r-addleg">＋ 移動を追加</button>
 
       <span class="fl">仕事内容</span>
       <textarea class="r-work" placeholder="〇〇社との打合せ、現場の立会い　など"></textarea>
@@ -162,10 +153,19 @@
   </div>
 </template>
 
-<!-- 移動1区間（飛行機・新幹線のときだけ） -->
+<!-- 移動1区間。手段は区間ごとに選ぶ。飛行機・新幹線のときだけ明細を出す -->
 <template id="tpl_leg">
   <div class="sub">
     <div class="sub-h"><b class="l-no"></b><button type="button" class="l-del">削除</button></div>
+    <span class="fl">手段</span>
+    <select class="l-mean empty">
+      <option value="">選んでください</option>
+      <option>飛行機</option>
+      <option>新幹線</option>
+      <option>在来線</option>
+      <option>車</option>
+    </select>
+    <div class="l-more hide">
     <span class="fl">利用日</span>
     <button type="button" class="dfield empty l-date"></button>
     <span class="fl">便名</span>
@@ -180,6 +180,7 @@
     </div>
     <span class="fl">支払</span>
     <div class="seg pay"><button type="button" class="on" data-v="個人">個人</button><button type="button" data-v="法人">法人</button><button type="button" data-v="支払なし">支払なし</button></div>
+    </div>
   </div>
 </template>
 
@@ -364,32 +365,41 @@
     var w = $('tpl_leg').content.firstElementChild.cloneNode(true);
     bindSeg(w.querySelector('.pay'));
     var d = bindField(w.querySelector('.l-date'), 'one', '利用日を選ぶ');
-    var cls = w.querySelector('.l-cls');
+    var cls = w.querySelector('.l-cls'), mean = w.querySelector('.l-mean');
     cls.onchange = function () { cls.classList.toggle('empty', !cls.value); };
+    mean.onchange = function () {
+      refreshLeg(w);
+      // 1本目の手段を選んだら、まだ選んでいない2本目にも同じ手段を入れておく（帰りだけ違うときは選び直す）
+      var legs = row.querySelector('.r-legs').children;
+      if (w === legs[0] && legs[1] && !legs[1].querySelector('.l-mean').value) {
+        legs[1].querySelector('.l-mean').value = mean.value;
+        refreshLeg(legs[1]);
+      }
+    };
     w.querySelector('.l-del').onclick = function () { w.remove(); renumberSubs(row.querySelector('.r-legs'), '移動'); };
     row.querySelector('.r-legs').appendChild(w);
     renumberSubs(row.querySelector('.r-legs'), '移動');
-    refreshLegs(row);
     var first = getDates(row.querySelector('.r-dates'))[0];
     if (first) setDates(d, [first]);   // 日帰りなので、行きも帰りも出張日を入れておく（手で変えられる）
     return w;
   }
 
-  /* 移動手段に合わせて、便名の例と座席クラスの選択肢を入れ替える */
-  function refreshLegs(row) {
-    var m = row.querySelector('.r-mean').value, list = CLS[m];
+  /* 区間の手段に合わせて、明細の出し分け・便名の例・座席クラスの選択肢を入れ替える */
+  function refreshLeg(w) {
+    var mean = w.querySelector('.l-mean'), m = mean.value, list = CLS[m];
+    mean.classList.toggle('empty', !m);
+    mean.classList.remove('bad');
+    w.querySelector('.l-more').classList.toggle('hide', !list);   // 飛行機・新幹線のときだけ
     if (!list) return;
-    each(row.querySelector('.r-legs').children, function (w) {
-      var cls = w.querySelector('.l-cls'), cur = cls.value;
-      cls.innerHTML = '<option value="">選んでください</option>';
-      list.forEach(function (t) { cls.appendChild(new Option(t, t.replace('（JAL）', ''))); });
-      cls.value = cur;
-      if (cls.selectedIndex < 0) cls.value = '';
-      cls.classList.toggle('empty', !cls.value);
-      w.querySelector('.l-name').placeholder = NAME_PH[m];
-      w.querySelector('.l-from').placeholder = FROM_PH[m][0];
-      w.querySelector('.l-to').placeholder = FROM_PH[m][1];
-    });
+    var cls = w.querySelector('.l-cls'), cur = cls.value;
+    cls.innerHTML = '<option value="">選んでください</option>';
+    list.forEach(function (t) { cls.appendChild(new Option(t, t.replace('（JAL）', ''))); });
+    cls.value = cur;
+    if (cls.selectedIndex < 0) cls.value = '';
+    cls.classList.toggle('empty', !cls.value);
+    w.querySelector('.l-name').placeholder = NAME_PH[m];
+    w.querySelector('.l-from').placeholder = FROM_PH[m][0];
+    w.querySelector('.l-to').placeholder = FROM_PH[m][1];
   }
 
   function renumber() {
@@ -402,7 +412,6 @@
 
   function addRow() {
     var row = $('tpl_row').content.firstElementChild.cloneNode(true);
-    var mean = row.querySelector('.r-mean');
 
     // 出張者：1件目はLINEの表示名、2件目以降は1件目と同じ名前を入れておく
     var firstRow = $('rows').children[0];
@@ -410,19 +419,11 @@
 
     bindField(row.querySelector('.r-dates'), 'multi', '日付を選ぶ');
 
-    mean.onchange = function () {
-      var need = !!CLS[mean.value];   // 飛行機・新幹線のときだけ明細を出す
-      mean.classList.toggle('empty', !mean.value);
-      mean.classList.remove('bad');
-      row.querySelector('.r-legbox').classList.toggle('hide', !need);
-      if (!need) return;
-      if (!row.querySelector('.r-legs').children.length) { addLeg(row); addLeg(row); }   // 行きと帰り
-      refreshLegs(row);
-    };
     row.querySelector('.r-addleg').onclick = function () { addLeg(row); };
 
     row.querySelector('.r-del').onclick = function () { row.remove(); renumber(); };
     $('rows').appendChild(row);
+    addLeg(row); addLeg(row);   // 行きと帰り
     renumber();
     return row;
   }
@@ -445,26 +446,25 @@
       var df = row.querySelector('.r-dates'), dates = getDates(df);
       if (!dates.length) bad(df, no + 'の出張日を選んでください。');
 
-      var mean = row.querySelector('.r-mean'), m = mean.value;
-      if (!m) bad(mean, no + 'の移動手段を選んでください。');
       var legs = [];
-      if (CLS[m]) {
-        each(row.querySelector('.r-legs').children, function (w) {
-          var sub = no + 'の' + w.querySelector('.sub-h b').textContent;
-          var d = w.querySelector('.l-date'), nm = w.querySelector('.l-name'), cls = w.querySelector('.l-cls');
-          var fr = w.querySelector('.l-from'), to = w.querySelector('.l-to');
-          var day = getDates(d)[0] || '';
-          if (!day) bad(d, sub + 'の利用日を選んでください。');
-          if (!val(nm.value)) bad(nm, sub + 'の便名をご記入ください。');
-          if (!cls.value) bad(cls, sub + 'の座席クラスを選んでください。');
-          if (!val(fr.value)) bad(fr, sub + 'の出発地をご記入ください。');
-          if (!val(to.value)) bad(to, sub + 'の到着地をご記入ください。');
-          legs.push({ k: day, s: (day ? jp(day) + wd(day) : '') + ' ' +
-                      val(fr.value) + '→' + val(to.value) + ' ' + val(nm.value) + '（' + cls.value + '）' +
-                      ' ／ ' + segVal(w.querySelector('.pay')) });
-        });
-        if (!legs.length) bad(row.querySelector('.r-addleg'), no + 'の移動を追加してください。');
-      }
+      each(row.querySelector('.r-legs').children, function (w) {
+        var sub = no + 'の' + w.querySelector('.sub-h b').textContent;
+        var mean = w.querySelector('.l-mean'), m = mean.value;
+        if (!m) { bad(mean, sub + 'の手段を選んでください。'); return; }
+        if (!CLS[m]) { legs.push({ k: '', m: m, s: m }); return; }   // 在来線・車は手段だけ
+        var d = w.querySelector('.l-date'), nm = w.querySelector('.l-name'), cls = w.querySelector('.l-cls');
+        var fr = w.querySelector('.l-from'), to = w.querySelector('.l-to');
+        var day = getDates(d)[0] || '';
+        if (!day) bad(d, sub + 'の利用日を選んでください。');
+        if (!val(nm.value)) bad(nm, sub + 'の便名をご記入ください。');
+        if (!cls.value) bad(cls, sub + 'の座席クラスを選んでください。');
+        if (!val(fr.value)) bad(fr, sub + 'の出発地をご記入ください。');
+        if (!val(to.value)) bad(to, sub + 'の到着地をご記入ください。');
+        legs.push({ k: day, m: m, detail: true, s: (day ? jp(day) + wd(day) : '') + ' ' + m + ' ' +
+                    val(fr.value) + '→' + val(to.value) + ' ' + val(nm.value) + '（' + cls.value + '）' +
+                    ' ／ ' + segVal(w.querySelector('.pay')) });
+      });
+      if (!row.querySelector('.r-legs').children.length) bad(row.querySelector('.r-addleg'), no + 'の移動を追加してください。');
 
       var work = row.querySelector('.r-work');
       if (!val(work.value)) bad(work, no + 'の仕事内容をご記入ください。');
@@ -474,9 +474,14 @@
       L.push('出張先：' + val(place.value));
       if (dates.length === 1) L.push('出張日：' + jp(dates[0]) + wd(dates[0]));
       else { L.push('出張日：'); dates.forEach(function (d) { L.push('・' + jp(d) + wd(d)); }); }
-      legs.sort(function (a, b) { return a.k < b.k ? -1 : a.k > b.k ? 1 : 0; });   // 移動は日付の順に
-      L.push('移動手段：' + m);
-      legs.forEach(function (x) { L.push('・' + x.s); });
+      // 在来線・車だけなら「移動手段：在来線」と1行に。飛行機・新幹線があれば区間ごとに1行
+      var hasDetail = legs.some(function (x) { return x.detail; });
+      if (!hasDetail) {
+        L.push('移動手段：' + legs.map(function (x) { return x.m; }).filter(function (v, j, a) { return a.indexOf(v) === j; }).join('・'));
+      } else {
+        L.push('移動手段：');
+        legs.forEach(function (x) { L.push('・' + x.s); });   // 入力した順（行き→帰り）のまま
+      }
       L.push('仕事内容：' + val(work.value));
     });
 

@@ -58,6 +58,11 @@
   .two{display:flex;gap:7px;align-items:center}
   .two>*{flex:1;min-width:0}
   .two span{flex:none;color:var(--dim);font-size:13px}
+  /* 支払の区分（1つだけ選ぶボタン） */
+  .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--white)}
+  .seg button{flex:1;border:none;background:none;padding:10px 4px;font-size:14px;font-family:inherit;color:#56655C;cursor:pointer}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--brand);color:#fff;font-weight:700}
 
   .pill{border:1px solid #BFD8CB;background:var(--white);color:var(--brand);font-size:13px;font-weight:700;
         font-family:inherit;padding:6px 12px;border-radius:16px;cursor:pointer;margin-top:9px}
@@ -192,6 +197,8 @@
       <span>→</span>
       <input type="text" class="l-to" placeholder="着（伊丹）">
     </div>
+    <span class="fl">支払</span>
+    <div class="seg pay"><button type="button" class="on" data-v="個人">個人</button><button type="button" data-v="法人">法人</button><button type="button" data-v="支払なし">支払なし</button></div>
   </div>
 </template>
 
@@ -203,6 +210,8 @@
     <input type="text" class="h-name" placeholder="ホテル名（ヒルトン大阪）">
     <span class="fl">宿泊期間 <em>／ チェックイン〜チェックアウト</em></span>
     <button type="button" class="dfield empty h-period"></button>
+    <span class="fl">支払</span>
+    <div class="seg pay"><button type="button" class="on" data-v="個人">個人</button><button type="button" data-v="法人">法人</button><button type="button" data-v="支払なし">支払なし</button></div>
   </div>
 </template>
 
@@ -393,8 +402,23 @@
     });
   }
 
+  /* 支払の区分：押したボタンだけを選ぶ。最初は「個人」 */
+  function bindSeg(box) {
+    each(box.children, function (b) {
+      b.onclick = function () {
+        each(box.children, function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+      };
+    });
+  }
+  function segVal(box) {
+    var on = box.querySelector('.on');
+    return on ? on.getAttribute('data-v') : '';
+  }
+
   function addLeg(row) {
     var w = $('tpl_leg').content.firstElementChild.cloneNode(true);
+    bindSeg(w.querySelector('.pay'));
     bindField(w.querySelector('.l-date'), 'one', '利用日を選ぶ');
     var cls = w.querySelector('.l-cls');
     cls.onchange = function () { cls.classList.toggle('empty', !cls.value); };
@@ -427,6 +451,7 @@
 
   function addStay(row) {
     var w = $('tpl_stay').content.firstElementChild.cloneNode(true);
+    bindSeg(w.querySelector('.pay'));
     var d = bindField(w.querySelector('.h-period'), 'stay', '宿泊期間を選ぶ');
     w.querySelector('.h-del').onclick = function () { w.remove(); renumberSubs(row.querySelector('.r-stays'), '宿泊先'); };
     row.querySelector('.r-stays').appendChild(w);
@@ -507,7 +532,8 @@
           var f = pd.getAttribute('data-from'), t = pd.getAttribute('data-to');
           if (!val(nm.value)) bad(nm, sub + 'の名前をご記入ください。');
           if (!f) bad(pd, sub + 'の宿泊期間を選んでください。');
-          stays.push({ k: f || '', s: val(nm.value) + '（' + (f ? jp(f) + '〜' + short(f, t) : '') + '）' });
+          stays.push({ k: f || '', s: val(nm.value) + '（' + (f ? jp(f) + '〜' + short(f, t) : '') + '）' +
+                      ' ／ ' + segVal(w.querySelector('.pay')) });
         });
         if (!stays.length) bad(row.querySelector('.r-addstay'), no + 'の宿泊先を追加してください。');
       }
@@ -526,7 +552,8 @@
           if (!val(fr.value)) bad(fr, sub + 'の出発地をご記入ください。');
           if (!val(to.value)) bad(to, sub + 'の到着地をご記入ください。');
           legs.push({ k: d.getAttribute('data-from') || '', s: rangeText(d.getAttribute('data-from'), '', 'one') + ' ' +
-                      val(fr.value) + '→' + val(to.value) + ' ' + val(nm.value) + '（' + cls.value + '）' });
+                      val(fr.value) + '→' + val(to.value) + ' ' + val(nm.value) + '（' + cls.value + '）' +
+                      ' ／ ' + segVal(w.querySelector('.pay')) });
         });
         if (!legs.length) bad(row.querySelector('.r-addleg'), no + 'の移動を追加してください。');
       }

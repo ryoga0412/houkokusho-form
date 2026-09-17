@@ -20,6 +20,7 @@
   main{padding:18px}
   .fl{display:block;font-size:12px;font-weight:700;color:var(--dim);margin:22px 0 7px;letter-spacing:.04em}
   .fl:first-child{margin-top:0}
+  #e_staybox .fl{margin-top:22px}
   .fl em{font-style:normal;font-weight:500;color:#B4BEB7}
   input[type=text],input[type=date],textarea,select{
     width:100%;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:15px;
@@ -61,6 +62,25 @@
   .seg2 div{flex:1;text-align:center;padding:11px 6px;font-size:13.5px;
             color:#56655C;cursor:pointer;user-select:none}
   .seg2 div.on{background:var(--brand);color:#fff;font-weight:700}
+  /* 手段・座席クラス・支払（タップで選ぶ） */
+  .segb{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--white)}
+  .segb button{flex:1;border:none;background:none;padding:10px 2px;font-size:13.5px;font-family:inherit;
+               color:#56655C;cursor:pointer;white-space:nowrap}
+  .segb button+button{border-left:1px solid var(--line)}
+  .segb button.on{background:var(--brand);color:#fff;font-weight:700}
+  .mini{display:block;font-size:11px;color:var(--dim);font-weight:700}
+  .card>.mini+*{margin-top:4px}
+  /* 自動で入った欄（さわると元の色に戻る） */
+  .auto,.segb.auto{background:#FFF6D8 !important}
+  .bad{outline:2px solid #B26B5E !important;outline-offset:-2px}
+  /* 往復ボタン */
+  .rt{width:100%;border:1.5px solid var(--brand);background:var(--white);color:var(--brand);
+      border-radius:10px;padding:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
+  /* 最近使った場所 */
+  .chips-l{display:block;font-size:11px;color:var(--dim)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .chips button{border:none;background:var(--brand-lt);color:var(--brand);border-radius:14px;padding:5px 12px;
+                font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
   .day{border:1px solid var(--line);border-radius:9px;overflow:hidden;
        margin-bottom:9px;background:var(--white)}
   .day-h{background:#F5F8F6;border-bottom:1px solid var(--line);padding:8px 12px;
@@ -195,15 +215,66 @@
 
   var MEANS = ['飛行機', '新幹線', '在来線', '車', 'バス'];
   var PAY    = ['個人', '法人', '支払なし'];   // 既定は個人（日帰り出張くんと同じ呼び方）
-  var CLS_JAL  = ['エコノミー', 'クラスJ', 'ファースト'];
-  var CLS_AIR  = ['エコノミー', 'ビジネス', 'ファースト'];
-  var CLS_TRAIN= ['自由席', '指定席', 'グリーン', 'グランクラス'];
+  var CLS = {   // 日帰り出張くんと同じ選択肢
+    '飛行機': ['エコノミー', 'クラスJ', 'ビジネス', 'ファースト'],
+    '新幹線': ['自由席', '指定席', 'グリーン', 'グランクラス']
+  };
+  var FROM_PH = { '飛行機': ['発（羽田）', '着（伊丹）'], '新幹線': ['発（東京）', '着（新大阪）'] };
   var MARU = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳';
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).trim(); };
   var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
   var maru = function (i) { return i < MARU.length ? MARU.charAt(i) : String(i + 1); };
+  var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
+
+  /* ---------- 使った場所を覚えておく（この端末の中だけ。サーバーには送らない） ----------
+     places[手段] … 最近使った場所（新しい順・8件まで）／ lastFrom[手段] … 前回の行きの出発地 */
+  var MEM_KEY = 'ai_form_places_v1';
+  var mem = (function () {
+    try { var o = JSON.parse(localStorage.getItem(MEM_KEY) || '{}') || {}; o.places = o.places || {}; o.lastFrom = o.lastFrom || {}; return o; }
+    catch (e) { return { places: {}, lastFrom: {} }; }
+  })();
+  function remember() {
+    each($('e_segs').children, function (w, i) {
+      var m = segVal(w.querySelector('.s-mean'));
+      if (!m) return;
+      var fr = esc(w.querySelector('.s-from').value), to = esc(w.querySelector('.s-to').value);
+      var list = mem.places[m] || [];
+      [to, fr].forEach(function (x) {
+        if (!x) return;
+        list = [x].concat(list.filter(function (y) { return y !== x; }));
+      });
+      mem.places[m] = list.slice(0, 8);
+      if (i === 0 && fr) mem.lastFrom[m] = fr;
+    });
+    try { localStorage.setItem(MEM_KEY, JSON.stringify(mem)); } catch (e) {}
+  }
+
+  /* タップで1つ選ぶボタン */
+  function segButtons(box, list, onPick) {
+    box.innerHTML = '';
+    list.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = t;
+      b.setAttribute('data-v', t);
+      b.onclick = function () {
+        setSeg(box, t);
+        box.classList.remove('auto');
+        if (onPick) onPick(t);
+      };
+      box.appendChild(b);
+    });
+  }
+  function setSeg(box, v) {
+    each(box.children, function (x) { x.classList.toggle('on', x.getAttribute('data-v') === v); });
+    box.classList.remove('bad');
+  }
+  function segVal(box) {
+    var on = box.querySelector('.on');
+    return on ? on.getAttribute('data-v') : '';
+  }
 
   function opt(sel, list, ph) {
     sel.innerHTML = '';
@@ -321,6 +392,7 @@
       cal.field.setAttribute('data-from', cal.from);
       cal.field.setAttribute('data-to', cal.to || cal.from);
       fieldText(cal.field);
+      cal.field.classList.remove('auto');
       $('cal').classList.add('hide');
       if (cal.field.id === 'e_period') syncDates();
     };
@@ -353,6 +425,8 @@
     Array.prototype.forEach.call(box.children, function (w, i) {
       w.querySelector('.card-h b').textContent = word + maru(i);
       w.setAttribute('data-idx', i);
+      var rt = w.querySelector('.s-rt');
+      if (rt) rt.classList.toggle('hide', i !== 0);   // 往復ボタンは移動①にだけ
     });
   }
 
@@ -361,37 +435,39 @@
     w.className = 'card';
     w.innerHTML =
       '<div class="card-h"><b></b><button type="button">削除</button></div>' +
-      '<div class="two"><select class="s-mean"></select>' +
-      '<button type="button" class="dfield empty s-date"></button></div>' +
+      '<div class="segb s-mean"></div>' +
+      '<button type="button" class="dfield empty s-date"></button>' +
       '<div class="two"><input type="text" class="s-from" placeholder="発（羽田）">' +
       '<span>→</span><input type="text" class="s-to" placeholder="着（伊丹）"></div>' +
-      '<input type="text" class="s-name" placeholder="例：JAL〇〇便">' +
-      '<select class="s-cls"></select>' +
-      '<select class="s-pay"></select>';
+      '<div class="s-chips hide"><span class="chips-l">最近使った場所（タップで入力）</span><div class="chips"></div></div>' +
+      '<input type="text" class="s-name hide" placeholder="例：JAL〇〇便">' +
+      '<span class="mini s-clsl hide">座席クラス</span>' +
+      '<div class="segb s-cls hide"></div>' +
+      '<span class="mini">支払</span>' +
+      '<div class="segb s-pay"></div>' +
+      '<button type="button" class="rt s-rt hide">⇄ 往復にする（帰りを自動入力）</button>';
 
     var mean = w.querySelector('.s-mean'), name = w.querySelector('.s-name');
     var cls = w.querySelector('.s-cls'), pay = w.querySelector('.s-pay');
-    opt(mean, MEANS, '移動手段');
-    opt(pay, PAY);
-    pay.value = '個人';
+    var fr = w.querySelector('.s-from'), to = w.querySelector('.s-to');
+    segButtons(pay, PAY);
+    setSeg(pay, '個人');
     bindField(w.querySelector('.s-date'), 'one', '利用日');
 
-    function refresh() {
-      var m = mean.value;
-      var need = (m === '飛行機' || m === '新幹線');
-      name.classList.toggle('hide', !need);
-      cls.classList.toggle('hide', !need);
-      if (!need) { name.value = ''; cls.value = ''; return; }
-      name.placeholder = (m === '新幹線') ? '例：のぞみ〇〇号' : '例：JAL〇〇便';   // 日帰り出張くんと同じ例
-      var list = (m === '新幹線') ? CLS_TRAIN
-               : /^(JL|JAL)/i.test(name.value) ? CLS_JAL : CLS_AIR;
-      var cur = cls.value;
-      opt(cls, list, '座席クラス');
-      if (cur) cls.value = cur;
-    }
-    mean.addEventListener('change', refresh);
-    name.addEventListener('input', refresh);
-    refresh();
+    segButtons(mean, MEANS, function (m) {
+      refreshSeg(w);
+      var segs = $('e_segs').children;
+      // 行き（移動①）の出発地が空なら、前回の出発地を入れておく
+      if (w === segs[0] && !esc(fr.value) && mem.lastFrom[m]) { fr.value = mem.lastFrom[m]; fr.classList.add('auto'); }
+      // 1本目の手段を選んだら、まだ選んでいない2本目にも同じ手段を入れておく
+      if (w === segs[0] && segs[1] && !segVal(segs[1].querySelector('.s-mean'))) {
+        setSeg(segs[1].querySelector('.s-mean'), m);
+        refreshSeg(segs[1]);
+      }
+    });
+    fr.onfocus = function () { w._last = 'from'; };
+    to.onfocus = function () { w._last = 'to'; };
+    w.querySelector('.s-rt').onclick = function () { roundTrip(w); };
 
     w.querySelector('.card-h button').onclick = function () {
       w.remove();
@@ -400,6 +476,90 @@
     $('e_segs').appendChild(w);
     renumber($('e_segs'), '移動');
     syncDates();
+    return w;
+  }
+
+  /* 手段に合わせて、便名・座席クラスの出し分けと、例・場所ボタンを入れ替える */
+  function refreshSeg(w) {
+    var m = segVal(w.querySelector('.s-mean')), list = CLS[m];
+    var name = w.querySelector('.s-name'), cls = w.querySelector('.s-cls');
+    name.classList.toggle('hide', !list);
+    cls.classList.toggle('hide', !list);
+    w.querySelector('.s-clsl').classList.toggle('hide', !list);
+    if (list) {
+      var cur = segVal(cls);
+      segButtons(cls, list);
+      setSeg(cls, cur);
+      name.placeholder = (m === '新幹線') ? '例：のぞみ〇〇号' : '例：JAL〇〇便';   // 日帰り出張くんと同じ例
+    } else {
+      name.value = '';
+      cls.innerHTML = '';
+    }
+    var ph = FROM_PH[m] || ['発', '着'];
+    w.querySelector('.s-from').placeholder = ph[0];
+    w.querySelector('.s-to').placeholder = ph[1];
+    drawChips(w, m);
+  }
+
+  /* 最近使った場所のボタン。発が空なら発へ、発が入っていれば着へ入れる */
+  function drawChips(w, m) {
+    var box = w.querySelector('.s-chips'), list = (mem.places[m] || []).slice(0, 6);
+    box.classList.toggle('hide', !list.length);
+    var g = box.querySelector('.chips');
+    g.innerHTML = '';
+    list.forEach(function (nm) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = nm;
+      b.onclick = function () {
+        var fr = w.querySelector('.s-from'), to = w.querySelector('.s-to'), el;
+        if (!esc(fr.value)) el = fr;
+        else if (!esc(to.value)) el = to;
+        else el = (w._last === 'from') ? fr : to;
+        el.value = nm;
+        el.classList.remove('bad', 'auto');
+      };
+      g.appendChild(b);
+    });
+  }
+
+  /* 往復：移動①を逆向きにして移動②へ入れる（手段・座席クラス・支払も同じ。利用日は出張の最終日） */
+  function roundTrip(w) {
+    var btn = w.querySelector('.s-rt'), label = '⇄ 往復にする（帰りを自動入力）';
+    var fr = w.querySelector('.s-from'), to = w.querySelector('.s-to'), m = segVal(w.querySelector('.s-mean'));
+    if (!m || !esc(fr.value) || !esc(to.value)) {
+      if (!m) w.querySelector('.s-mean').classList.add('bad');
+      if (!esc(fr.value)) fr.classList.add('bad');
+      if (!esc(to.value)) to.classList.add('bad');
+      btn.textContent = '先に移動①の手段と発着を入れてください';
+      setTimeout(function () { btn.textContent = label; }, 2200);
+      return;
+    }
+    var back = $('e_segs').children[1] || addSeg();
+    setSeg(back.querySelector('.s-mean'), m);
+    refreshSeg(back);
+    back.querySelector('.s-mean').classList.add('auto');
+
+    var day = tripRange().to || w.querySelector('.s-date').getAttribute('data-from');
+    if (day) {
+      var bd = back.querySelector('.s-date');
+      bd.setAttribute('data-from', day);
+      bd.setAttribute('data-to', day);
+      fieldText(bd);
+      bd.classList.add('auto');
+    }
+    var c = segVal(w.querySelector('.s-cls'));
+    if (c) { setSeg(back.querySelector('.s-cls'), c); back.querySelector('.s-cls').classList.add('auto'); }
+    setSeg(back.querySelector('.s-pay'), segVal(w.querySelector('.s-pay')));
+
+    var bf = back.querySelector('.s-from'), bt = back.querySelector('.s-to');
+    bf.value = esc(to.value); bt.value = esc(fr.value);
+    bf.classList.add('auto'); bt.classList.add('auto');
+    bf.classList.remove('bad'); bt.classList.remove('bad');
+
+    btn.textContent = '✓ 帰りに入れました';
+    setTimeout(function () { btn.textContent = label; }, 2500);
+    back.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
   function addStay() {
@@ -409,10 +569,11 @@
       '<div class="card-h"><b></b><button type="button">削除</button></div>' +
       '<input type="text" class="h-name" placeholder="ホテル名（ヒルトン大阪）">' +
       '<button type="button" class="dfield empty h-period"></button>' +
-      '<select class="h-pay"></select>';
+      '<span class="mini">支払</span>' +
+      '<div class="segb h-pay"></div>';
     var pay = w.querySelector('.h-pay');
-    opt(pay, PAY);
-    pay.value = '個人';
+    segButtons(pay, PAY);
+    setSeg(pay, '個人');
     bindField(w.querySelector('.h-period'), 'stay', '宿泊期間を選ぶ');
     w.querySelector('.card-h button').onclick = function () {
       w.remove();
@@ -465,17 +626,17 @@
 
     var segs = [];
     Array.prototype.forEach.call($('e_segs').children, function (w) {
-      var m = w.querySelector('.s-mean').value;
+      var m = segVal(w.querySelector('.s-mean'));
       var a = esc(w.querySelector('.s-from').value);
       var b = esc(w.querySelector('.s-to').value);
       var dv = w.querySelector('.s-date').getAttribute('data-from') || '';
       if (!m && !a && !b) return;
       var t = (dv ? jp(dv) + ' ' : '') + (m || '移動') + ' ' + (a || '？') + '→' + (b || '？');
       var nm = esc(w.querySelector('.s-name').value);
-      var cl = w.querySelector('.s-cls').value;
+      var cl = segVal(w.querySelector('.s-cls'));
       if (nm) t += ' ' + nm;
       if (cl) t += '（' + cl + '）';
-      var pv = w.querySelector('.s-pay').value;
+      var pv = segVal(w.querySelector('.s-pay'));
       if (pv) t += ' ／ ' + pv;
       segs.push(t);
     });
@@ -492,7 +653,7 @@
       var f = d.getAttribute('data-from') || '', t2 = d.getAttribute('data-to') || '';
       var s = nm;
       if (f) s += '（' + jp(f) + (t2 && t2 !== f ? '〜' + jp(t2) : '') + '）';
-      var pv = w.querySelector('.h-pay').value;
+      var pv = segVal(w.querySelector('.h-pay'));
       if (pv) s += ' ／ ' + pv;
       stays.push(s);
     });
@@ -572,8 +733,9 @@
   function show(t) { var m = $('msg'); m.textContent = t; m.classList.remove('hide'); }
 
   /* ============ 起動 ============ */
-  liff.init({ liffId: LIFF_ID }).then(function () {
-    if (!liff.isInClient()) { show('このページはLINEアプリの中で開いてください。'); return; }
+  var PREVIEW = /[?&]preview=1/.test(location.search);   // PCでの見た目確認用（送信しない）
+  (PREVIEW ? Promise.resolve() : liff.init({ liffId: LIFF_ID })).then(function () {
+    if (!PREVIEW && !liff.isInClient()) { show('このページはLINEアプリの中で開いてください。'); return; }
     setupCal();
     if (mode === 'report') buildReport(); else buildExpense();
     $('form').classList.remove('hide');
@@ -590,9 +752,14 @@
         .catch(failed);
     }
 
+    // 直し始めたら、自動入力の色と赤枠を消す
+    document.addEventListener('input', function (e) { if (e.target.classList) e.target.classList.remove('bad', 'auto'); });
+
     $('send').onclick = function () {
       var r = (mode === 'report') ? reportText() : expenseText();
       if (r.err) { alert(r.err); return; }
+      if (mode !== 'report') remember();   // 次回のために、使った場所をこの端末に覚えておく
+      if (PREVIEW) { console.log(r.text); show('プレビューのため送信していません。'); return; }
       $('send').disabled = true;
       $('send').textContent = '送信中…（少しお待ちください）';
       /* 通常：受付先へ直接送る。トークに申請文は出さず、AIの返事だけが届く（日帰り出張くんと同じ） */

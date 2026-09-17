@@ -19,7 +19,7 @@
   .msg{margin:18px;padding:14px;border-radius:10px;background:#FBEDE9;color:#8C4A3C;font-size:13.5px}
   .hide{display:none !important}
 
-  /* 1行＝1件の出張 */
+  /* 1枠＝1件の出張 */
   .row{background:var(--white);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
   .row-h{display:flex;justify-content:space-between;align-items:center;
          background:#F2F7F4;border-bottom:1px solid var(--line);padding:9px 14px}
@@ -42,23 +42,29 @@
     background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
   select.empty{color:#AEB8B1}
 
-  .dates>*+*{margin-top:7px}
-  .dline{display:flex;gap:6px;align-items:center}
-  .dfield{flex:1;min-width:0;border:1px solid var(--line);border-radius:9px;padding:11px 12px;
+  .dfield{width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:11px 12px;
           font-size:15px;font-family:inherit;color:var(--ink);background:var(--white);
-          text-align:left;line-height:1.6;cursor:pointer}
+          text-align:left;line-height:1.6;cursor:pointer;display:block}
   .dfield.empty{color:#AEB8B1}
-  .dline .x{flex:none;width:38px;height:46px;border:none;background:none;color:var(--warn);font-size:20px;cursor:pointer}
-  .another{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .another span{font-size:12.5px;color:#56655C}
-  .adddate{border:1px solid #BFD8CB;background:var(--white);color:var(--brand);font-size:13px;font-weight:700;
-           font-family:inherit;padding:6px 12px;border-radius:16px;cursor:pointer}
+  .dline{display:flex;gap:6px;align-items:center;margin-top:7px}
+  .dline .dfield{flex:1}
+  .x{flex:none;width:38px;height:46px;border:none;background:none;color:var(--warn);font-size:20px;cursor:pointer}
 
-  .more{background:#F7FAF8;border:1px solid var(--line);border-radius:10px;padding:2px 11px 11px;margin-top:9px}
-  .more .fl{margin-top:9px}
+  /* 明細（移動・宿泊）の小さなカード */
+  .sub{background:#F7FAF8;border:1px solid var(--line);border-radius:10px;padding:4px 11px 11px;margin-top:9px}
+  .sub-h{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+  .sub-h b{font-size:12.5px;color:var(--brand)}
+  .sub-h button{background:none;border:none;color:var(--warn);font-size:12px;font-family:inherit;cursor:pointer;padding:2px 4px}
+  .sub .fl{margin-top:9px}
   .two{display:flex;gap:7px;align-items:center}
   .two>*{flex:1;min-width:0}
   .two span{flex:none;color:var(--dim);font-size:13px}
+
+  .pill{border:1px solid #BFD8CB;background:var(--white);color:var(--brand);font-size:13px;font-weight:700;
+        font-family:inherit;padding:6px 12px;border-radius:16px;cursor:pointer;margin-top:9px}
+  .another{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  .another>span{display:block;font-size:12.5px;color:#56655C}
+  .another .pill{margin-top:6px}
 
   .addrow{border:1.5px dashed #BFD8CB;color:var(--brand);border-radius:11px;padding:13px;
           text-align:center;font-size:14px;font-weight:700;background:var(--white);width:100%;
@@ -130,24 +136,21 @@
   </main>
 </div>
 
-<!-- 1行のひな形 -->
+<!-- 出張1件のひな形 -->
 <template id="tpl_row">
   <div class="row">
     <div class="row-h"><b class="r-no"></b><button type="button" class="r-del">この出張を削除</button></div>
     <div class="row-b">
       <span class="fl">出張開始・終了日 <em>／ 日帰りは同じ日を2回</em></span>
-      <div class="dates r-dates"></div>
-      <div class="another">
-        <span>別の日に同じ内容の出張がありましたか？</span>
-        <button type="button" class="adddate r-adddate">＋日付の追加</button>
-      </div>
+      <button type="button" class="dfield empty r-date0"></button>
 
       <span class="fl">出張先</span>
-      <input type="text" class="r-place" placeholder="大阪府 大阪市／アメリカ ラスベガス">
+      <input type="text" class="r-place" placeholder="品川／ゴルフ場名／現場名">
 
       <div class="r-staybox hide">
         <span class="fl">宿泊先 <em>／ 泊まりの出張のときだけ</em></span>
-        <input type="text" class="r-stay" placeholder="ホテル名（ヒルトン大阪）">
+        <div class="r-stays"></div>
+        <button type="button" class="pill r-addstay">＋ 宿泊先を追加</button>
       </div>
 
       <span class="fl">移動手段</span>
@@ -158,24 +161,54 @@
         <option>在来線</option>
         <option>車</option>
       </select>
-      <div class="more r-more hide">
-        <span class="fl">座席クラス</span>
-        <select class="r-cls empty"></select>
-        <span class="fl">発着</span>
-        <div class="two">
-          <input type="text" class="r-from" placeholder="発（羽田）">
-          <span>→</span>
-          <input type="text" class="r-to" placeholder="着（伊丹）">
-        </div>
+      <div class="r-legbox hide">
+        <div class="r-legs"></div>
+        <button type="button" class="pill r-addleg">＋ 移動を追加</button>
       </div>
 
       <span class="fl">仕事内容</span>
       <textarea class="r-work" placeholder="〇〇社との打合せ、現場の立会い　など"></textarea>
+
+      <div class="another">
+        <span>別の日に同じ内容の出張はありますか？</span>
+        <div class="r-dates"></div>
+        <button type="button" class="pill r-adddate">＋ 日付の追加</button>
+      </div>
     </div>
   </div>
 </template>
 
-<!-- カレンダー（開始日と終了日を1枚で決める） -->
+<!-- 移動1区間（飛行機・新幹線のときだけ） -->
+<template id="tpl_leg">
+  <div class="sub">
+    <div class="sub-h"><b class="l-no"></b><button type="button" class="l-del">削除</button></div>
+    <span class="fl">利用日</span>
+    <button type="button" class="dfield empty l-date"></button>
+    <span class="fl">便名</span>
+    <input type="text" class="l-name">
+    <span class="fl">座席クラス</span>
+    <select class="l-cls empty"></select>
+    <span class="fl">発着</span>
+    <div class="two">
+      <input type="text" class="l-from" placeholder="発（羽田）">
+      <span>→</span>
+      <input type="text" class="l-to" placeholder="着（伊丹）">
+    </div>
+  </div>
+</template>
+
+<!-- 宿泊1件 -->
+<template id="tpl_stay">
+  <div class="sub">
+    <div class="sub-h"><b class="h-no"></b><button type="button" class="h-del">削除</button></div>
+    <span class="fl">宿泊先名</span>
+    <input type="text" class="h-name" placeholder="ホテル名（ヒルトン大阪）">
+    <span class="fl">宿泊期間 <em>／ チェックイン〜チェックアウト</em></span>
+    <button type="button" class="dfield empty h-period"></button>
+  </div>
+</template>
+
+<!-- カレンダー -->
 <div class="sheet hide" id="cal">
   <div class="sheet-in">
     <div class="cal-h">
@@ -205,11 +238,14 @@
     '飛行機': ['エコノミー', 'クラスJ（JAL）', 'ビジネス', 'ファースト'],
     '新幹線': ['自由席', '指定席', 'グリーン', 'グランクラス']
   };
+  var NAME_PH = { '飛行機': '例：JAL〇〇便', '新幹線': '例：のぞみ〇〇号' };
+  var FROM_PH = { '飛行機': ['発（羽田）', '着（伊丹）'], '新幹線': ['発（東京）', '着（新大阪）'] };
 
   var $ = function (id) { return document.getElementById(id); };
   var val = function (s) { return String(s == null ? '' : s).trim(); };
   var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
   var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
+  var circled = function (i) { return i < 20 ? String.fromCharCode(0x2460 + i) : String(i + 1); };   // ①②③…
 
   function jp(iso) {
     var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -219,25 +255,43 @@
     var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
     return m ? '（' + '日月火水木金土'.charAt(new Date(+m[1], m[2] - 1, +m[3]).getDay()) + '）' : '';
   }
-  function rangeText(f, t) {
+  function short(f, t) {   // 同じ年なら終了日の年は省く
+    return (f.slice(0, 4) === t.slice(0, 4)) ? jp(t).replace(/^\d{4}年/, '') : jp(t);
+  }
+  /* kind: trip＝出張期間／one＝1日だけ／stay＝宿泊期間 */
+  function rangeText(f, t, kind) {
     if (!f) return '';
+    if (kind === 'one') return jp(f) + wd(f);
     if (!t || t === f) return jp(f) + wd(f) + '（日帰り）';
-    var tt = (f.slice(0, 4) === t.slice(0, 4)) ? jp(t).replace(/^\d{4}年/, '') : jp(t);   // 同じ年なら終了日の年は省く
-    return jp(f) + wd(f) + '〜' + tt + wd(t);
+    return jp(f) + wd(f) + '〜' + short(f, t) + wd(t);
   }
 
   /* ---------- カレンダー ---------- */
-  var cal = { field: null, from: '', to: '', cur: new Date() };
+  var cal = { field: null, kind: 'trip', from: '', to: '', cur: new Date() };
 
   function fieldText(el) {
-    var f = el.getAttribute('data-from'), t = el.getAttribute('data-to');
+    var f = el.getAttribute('data-from'), t = el.getAttribute('data-to'), k = el.getAttribute('data-kind');
     el.classList.toggle('empty', !f);
-    el.textContent = f ? rangeText(f, t) : '日付を選ぶ';
+    el.textContent = f ? rangeText(f, t, k) : el.getAttribute('data-ph');
+  }
+  function bindField(el, kind, ph) {
+    el.setAttribute('data-kind', kind);
+    el.setAttribute('data-ph', ph);
+    el.onclick = function () { openCal(el); };
+    fieldText(el);
+    return el;
+  }
+  function setField(el, f, t) {
+    el.setAttribute('data-from', f);
+    el.setAttribute('data-to', t || f);
+    el.classList.remove('bad');
+    fieldText(el);
   }
   function openCal(el) {
     cal.field = el;
+    cal.kind = el.getAttribute('data-kind');
     cal.from = el.getAttribute('data-from') || '';
-    cal.to = el.getAttribute('data-to') || '';
+    cal.to = (cal.kind === 'one') ? '' : (el.getAttribute('data-to') || '');
     cal.cur = cal.from ? new Date(cal.from + 'T00:00:00') : new Date();
     cal.cur.setDate(1);
     drawCal();
@@ -261,15 +315,25 @@
       c.onclick = pickDay;
       g.appendChild(c);
     }
-    var s = $('cal_sel');
-    if (!cal.from) s.innerHTML = '開始日を選んでください';
-    else if (!cal.to) s.innerHTML = '<b>' + jp(cal.from) + '</b> 〜 終了日を選んでください（日帰りは同じ日をもう一度）';
-    else s.innerHTML = '<b>' + rangeText(cal.from, cal.to) + '</b>';
-    $('cal_ok').disabled = !cal.from;
+    var s = $('cal_sel'), k = cal.kind;
+    if (k === 'one') {
+      s.innerHTML = cal.from ? '<b>' + rangeText(cal.from, '', 'one') + '</b>' : '利用日を選んでください';
+    } else if (!cal.from) {
+      s.innerHTML = (k === 'stay') ? 'チェックインの日を選んでください' : '開始日を選んでください';
+    } else if (!cal.to) {
+      s.innerHTML = '<b>' + jp(cal.from) + '</b> 〜 ' +
+        ((k === 'stay') ? 'チェックアウトの日を選んでください' : '終了日を選んでください（日帰りは同じ日をもう一度）');
+    } else {
+      s.innerHTML = '<b>' + rangeText(cal.from, cal.to, k) + '</b>';
+    }
+    // 宿泊は1泊以上（チェックアウトがチェックインより後）のときだけ決定できる
+    $('cal_ok').disabled = !cal.from || (k === 'stay' && !(cal.to && cal.to > cal.from));
   }
   function pickDay() {
     var iso = this.getAttribute('data-iso');
-    if (!cal.from || cal.to || iso < cal.from) { cal.from = iso; cal.to = ''; }
+    if (cal.kind === 'one') cal.from = iso;
+    else if (!cal.from || cal.to || iso < cal.from) { cal.from = iso; cal.to = ''; }
+    else if (cal.kind === 'stay' && iso === cal.from) { /* 同じ日は選べない */ }
     else cal.to = iso;
     drawCal();
   }
@@ -280,72 +344,135 @@
     $('cal').onclick = function (e) { if (e.target === $('cal')) $('cal').classList.add('hide'); };
     $('cal_ok').onclick = function () {
       if (!cal.from) return;
-      cal.field.setAttribute('data-from', cal.from);
-      cal.field.setAttribute('data-to', cal.to || cal.from);   // 終了日を選ばずに決定したら日帰り
-      cal.field.classList.remove('bad');
-      fieldText(cal.field);
+      var el = cal.field;
+      el.setAttribute('data-touched', '1');
+      setField(el, cal.from, cal.to || cal.from);   // 終了日を選ばずに決定したら日帰り
       $('cal').classList.add('hide');
-      syncStay(cal.field.closest('.row'));
+      var row = el.closest('.row');
+      if (el.classList.contains('r-date0') || el.closest('.r-dates')) onTripDates(row);
     };
   }
 
-  /* ---------- 行 ---------- */
-  function addDate(row, removable) {
-    var line = document.createElement('div');
-    line.className = 'dline';
-    line.innerHTML = '<button type="button" class="dfield empty"></button>' +
-                     (removable ? '<button type="button" class="x" aria-label="この日を削除">×</button>' : '');
-    var f = line.querySelector('.dfield');
-    f.onclick = function () { openCal(f); };
-    fieldText(f);
-    if (removable) line.querySelector('.x').onclick = function () { line.remove(); syncStay(row); };
-    row.querySelector('.r-dates').appendChild(line);
-    return f;
+  /* ---------- 出張1件 ---------- */
+  function tripRange(row) {
+    var f = row.querySelector('.r-date0');
+    return { from: f.getAttribute('data-from') || '', to: f.getAttribute('data-to') || '' };
   }
 
-  /* 開始日と終了日が別の日（泊まり）が1つでもあれば、宿泊先の欄を出す */
-  function syncStay(row) {
-    if (!row) return;
+  /* 出張の日付が決まったとき：宿泊欄の出し分けと、空いている日付の初期値 */
+  function onTripDates(row) {
     var overnight = false;
-    each(row.querySelectorAll('.dfield'), function (f) {
+    each(row.querySelectorAll('.r-date0, .r-dates .dfield'), function (f) {
       var a = f.getAttribute('data-from'), b = f.getAttribute('data-to');
       if (a && b && a !== b) overnight = true;
     });
     row.querySelector('.r-staybox').classList.toggle('hide', !overnight);
+    if (overnight && !row.querySelector('.r-stays').children.length) addStay(row);
+
+    var r = tripRange(row);
+    if (!r.from) return;
+    each(row.querySelector('.r-legs').children, function (w, i) {
+      var d = w.querySelector('.l-date');
+      if (d.getAttribute('data-touched')) return;
+      if (i === 0) setField(d, r.from);
+      else if (i === 1) setField(d, r.to);
+    });
+    if (r.to !== r.from) {
+      each(row.querySelector('.r-stays').children, function (w) {
+        var d = w.querySelector('.h-period');
+        if (!d.getAttribute('data-touched')) setField(d, r.from, r.to);
+      });
+    }
+  }
+
+  function renumberSubs(box, word) {
+    var n = box.children.length;
+    each(box.children, function (w, i) {
+      w.querySelector('.sub-h b').textContent = word + circled(i);
+      w.querySelector('.sub-h button').classList.toggle('hide', n === 1);
+    });
+  }
+
+  function addLeg(row) {
+    var w = $('tpl_leg').content.firstElementChild.cloneNode(true);
+    bindField(w.querySelector('.l-date'), 'one', '利用日を選ぶ');
+    var cls = w.querySelector('.l-cls');
+    cls.onchange = function () { cls.classList.toggle('empty', !cls.value); };
+    w.querySelector('.l-del').onclick = function () { w.remove(); renumberSubs(row.querySelector('.r-legs'), '移動'); };
+    row.querySelector('.r-legs').appendChild(w);
+    renumberSubs(row.querySelector('.r-legs'), '移動');
+    refreshLegs(row);
+    // 1本目は出発日、2本目は最終日を入れておく（手で変えられる）
+    var r = tripRange(row), i = row.querySelector('.r-legs').children.length - 1;
+    if (r.from && i < 2) setField(w.querySelector('.l-date'), i === 0 ? r.from : r.to);
+    return w;
+  }
+
+  /* 移動手段に合わせて、便名の例と座席クラスの選択肢を入れ替える */
+  function refreshLegs(row) {
+    var m = row.querySelector('.r-mean').value, list = CLS[m];
+    if (!list) return;
+    each(row.querySelector('.r-legs').children, function (w) {
+      var cls = w.querySelector('.l-cls'), cur = cls.value;
+      cls.innerHTML = '<option value="">選んでください</option>';
+      list.forEach(function (t) { cls.appendChild(new Option(t, t.replace('（JAL）', ''))); });
+      cls.value = cur;
+      if (cls.selectedIndex < 0) cls.value = '';
+      cls.classList.toggle('empty', !cls.value);
+      w.querySelector('.l-name').placeholder = NAME_PH[m];
+      w.querySelector('.l-from').placeholder = FROM_PH[m][0];
+      w.querySelector('.l-to').placeholder = FROM_PH[m][1];
+    });
+  }
+
+  function addStay(row) {
+    var w = $('tpl_stay').content.firstElementChild.cloneNode(true);
+    var d = bindField(w.querySelector('.h-period'), 'stay', '宿泊期間を選ぶ');
+    w.querySelector('.h-del').onclick = function () { w.remove(); renumberSubs(row.querySelector('.r-stays'), '宿泊先'); };
+    row.querySelector('.r-stays').appendChild(w);
+    renumberSubs(row.querySelector('.r-stays'), '宿泊先');
+    // 1件目だけ出張期間を入れておく。2件目以降（ホテルを移った場合）は選んでもらう
+    var r = tripRange(row);
+    if (row.querySelector('.r-stays').children.length === 1 && r.from && r.to !== r.from) setField(d, r.from, r.to);
+    return w;
   }
 
   function renumber() {
     var rows = $('rows').children;
     each(rows, function (r, i) {
-      r.querySelector('.r-no').textContent = '出張' + (i < 20 ? String.fromCharCode(0x2460 + i) : (i + 1));   // ①②③…
+      r.querySelector('.r-no').textContent = '出張' + circled(i);
       r.querySelector('.r-del').classList.toggle('hide', rows.length === 1);
     });
   }
 
   function addRow() {
     var row = $('tpl_row').content.firstElementChild.cloneNode(true);
-    var mean = row.querySelector('.r-mean'), cls = row.querySelector('.r-cls'), more = row.querySelector('.r-more');
+    var mean = row.querySelector('.r-mean');
 
-    addDate(row, false);
-    row.querySelector('.r-adddate').onclick = function () { openCal(addDate(row, true)); };
+    bindField(row.querySelector('.r-date0'), 'trip', '日付を選ぶ');
+
+    row.querySelector('.r-adddate').onclick = function () {
+      var line = document.createElement('div');
+      line.className = 'dline';
+      line.innerHTML = '<button type="button" class="dfield empty"></button>' +
+                       '<button type="button" class="x" aria-label="この日を削除">×</button>';
+      var f = bindField(line.querySelector('.dfield'), 'trip', '日付を選ぶ');
+      line.querySelector('.x').onclick = function () { line.remove(); onTripDates(row); };
+      row.querySelector('.r-dates').appendChild(line);
+      openCal(f);
+    };
 
     mean.onchange = function () {
-      var m = mean.value, list = CLS[m];
-      mean.classList.toggle('empty', !m);
+      var need = !!CLS[mean.value];   // 飛行機・新幹線のときだけ明細を出す
+      mean.classList.toggle('empty', !mean.value);
       mean.classList.remove('bad');
-      more.classList.toggle('hide', !list);   // 飛行機・新幹線のときだけ出す
-      if (!list) return;
-      var cur = cls.value;
-      cls.innerHTML = '<option value="">選んでください</option>';
-      list.forEach(function (t) { cls.appendChild(new Option(t, t.replace('（JAL）', ''))); });
-      cls.value = cur;   // 選び直す前のクラスが新しい一覧にあれば残す
-      if (cls.selectedIndex < 0) cls.value = '';
-      cls.classList.toggle('empty', !cls.value);
+      row.querySelector('.r-legbox').classList.toggle('hide', !need);
+      if (!need) return;
+      if (!row.querySelector('.r-legs').children.length) { addLeg(row); addLeg(row); }   // 行きと帰り
+      refreshLegs(row);
     };
-    cls.onchange = function () { cls.classList.toggle('empty', !cls.value); cls.classList.remove('bad'); };
-    each(row.querySelectorAll('input,textarea'), function (el) {
-      el.addEventListener('input', function () { el.classList.remove('bad'); });
-    });
+    row.querySelector('.r-addleg').onclick = function () { addLeg(row); };
+    row.querySelector('.r-addstay').onclick = function () { addStay(row); };
 
     row.querySelector('.r-del').onclick = function () { row.remove(); renumber(); };
     $('rows').appendChild(row);
@@ -357,41 +484,67 @@
   function build() {
     each(document.querySelectorAll('.bad'), function (x) { x.classList.remove('bad'); });
     var rows = $('rows').children, L = [HEADER], first = null;
-
     function bad(el, msg) { el.classList.add('bad'); if (!first) first = { el: el, msg: msg }; }
 
     each(rows, function (row, i) {
       var no = row.querySelector('.r-no').textContent;
+
       var dates = [];
-      each(row.querySelectorAll('.dfield'), function (f) {
+      each(row.querySelectorAll('.r-date0, .r-dates .dfield'), function (f) {
         var a = f.getAttribute('data-from');
-        if (a) dates.push(rangeText(a, f.getAttribute('data-to')));
+        if (a) dates.push(rangeText(a, f.getAttribute('data-to'), 'trip'));
         else bad(f, no + 'の日付を選んでください。');
       });
-      var place = row.querySelector('.r-place'), mean = row.querySelector('.r-mean');
-      var work = row.querySelector('.r-work');
-      if (!val(place.value)) bad(place, no + 'の出張先をご記入ください。');
-      if (!mean.value) bad(mean, no + 'の移動手段を選んでください。');
-      var stayBox = row.querySelector('.r-staybox'), stay = row.querySelector('.r-stay');
-      var needStay = !stayBox.classList.contains('hide');
-      if (needStay && !val(stay.value)) bad(stay, no + 'の宿泊先をご記入ください。');
 
-      var meanTxt = mean.value;
-      if (CLS[mean.value]) {
-        var cls = row.querySelector('.r-cls'), fr = row.querySelector('.r-from'), to = row.querySelector('.r-to');
-        if (!cls.value) bad(cls, no + 'の座席クラスを選んでください。');
-        if (!val(fr.value)) bad(fr, no + 'の出発地をご記入ください。');
-        if (!val(to.value)) bad(to, no + 'の到着地をご記入ください。');
-        meanTxt += '（' + val(fr.value) + '→' + val(to.value) + '／' + cls.value + '）';
+      var place = row.querySelector('.r-place');
+      if (!val(place.value)) bad(place, no + 'の出張先をご記入ください。');
+
+      var stays = [];
+      if (!row.querySelector('.r-staybox').classList.contains('hide')) {
+        each(row.querySelector('.r-stays').children, function (w) {
+          var sub = no + 'の' + w.querySelector('.sub-h b').textContent;
+          var nm = w.querySelector('.h-name'), pd = w.querySelector('.h-period');
+          var f = pd.getAttribute('data-from'), t = pd.getAttribute('data-to');
+          if (!val(nm.value)) bad(nm, sub + 'の名前をご記入ください。');
+          if (!f) bad(pd, sub + 'の宿泊期間を選んでください。');
+          stays.push({ k: f || '', s: val(nm.value) + '（' + (f ? jp(f) + '〜' + short(f, t) : '') + '）' });
+        });
+        if (!stays.length) bad(row.querySelector('.r-addstay'), no + 'の宿泊先を追加してください。');
       }
+
+      var mean = row.querySelector('.r-mean'), m = mean.value;
+      if (!m) bad(mean, no + 'の移動手段を選んでください。');
+      var legs = [];
+      if (CLS[m]) {
+        each(row.querySelector('.r-legs').children, function (w) {
+          var sub = no + 'の' + w.querySelector('.sub-h b').textContent;
+          var d = w.querySelector('.l-date'), nm = w.querySelector('.l-name'), cls = w.querySelector('.l-cls');
+          var fr = w.querySelector('.l-from'), to = w.querySelector('.l-to');
+          if (!d.getAttribute('data-from')) bad(d, sub + 'の利用日を選んでください。');
+          if (!val(nm.value)) bad(nm, sub + 'の便名をご記入ください。');
+          if (!cls.value) bad(cls, sub + 'の座席クラスを選んでください。');
+          if (!val(fr.value)) bad(fr, sub + 'の出発地をご記入ください。');
+          if (!val(to.value)) bad(to, sub + 'の到着地をご記入ください。');
+          legs.push({ k: d.getAttribute('data-from') || '', s: rangeText(d.getAttribute('data-from'), '', 'one') + ' ' +
+                      val(fr.value) + '→' + val(to.value) + ' ' + val(nm.value) + '（' + cls.value + '）' });
+        });
+        if (!legs.length) bad(row.querySelector('.r-addleg'), no + 'の移動を追加してください。');
+      }
+
+      var work = row.querySelector('.r-work');
       if (!val(work.value)) bad(work, no + 'の仕事内容をご記入ください。');
 
       if (rows.length > 1) L.push((i ? '\n' : '') + '■' + no);
       if (dates.length === 1) L.push('出張期間：' + dates[0]);
       else { L.push('出張期間：（同じ内容で' + dates.length + '回）'); dates.forEach(function (d) { L.push('・' + d); }); }
       L.push('出張先：' + val(place.value));
-      if (needStay) L.push('宿泊先：' + val(stay.value));
-      L.push('移動手段：' + meanTxt);
+      // 移動と宿泊は日付の順に並べて送る（入力した順ではなく）
+      var byDate = function (a, b) { return a.k < b.k ? -1 : a.k > b.k ? 1 : 0; };
+      stays.sort(byDate); legs.sort(byDate);
+      if (stays.length === 1) L.push('宿泊先：' + stays[0].s);
+      else if (stays.length) { L.push('宿泊先：'); stays.forEach(function (x) { L.push('・' + x.s); }); }
+      L.push('移動手段：' + m);
+      legs.forEach(function (x) { L.push('・' + x.s); });
       L.push('仕事内容：' + val(work.value));
     });
 
@@ -409,9 +562,9 @@
   function start() {
     setupCal();
     addRow();
-    // 直し始めたら、前のエラー表示は消す
-    document.addEventListener('input', function () { $('err').textContent = ''; });
-    document.addEventListener('change', function () { $('err').textContent = ''; });
+    // 直し始めたら、エラー表示と赤枠を消す
+    document.addEventListener('input', function (e) { $('err').textContent = ''; if (e.target.classList) e.target.classList.remove('bad'); });
+    document.addEventListener('change', function (e) { $('err').textContent = ''; if (e.target.classList) e.target.classList.remove('bad'); });
     $('addrow').onclick = function () {
       var r = addRow();
       r.scrollIntoView({ block: 'start', behavior: 'smooth' });

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>らくらく申請書くん</title>
+<title>らくらく申請くん</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
   :root{--brand:#0E6B4C;--brand-lt:#E4F1EA;--ink:#1B2320;--dim:#8A9790;
@@ -49,8 +49,10 @@
           text-align:left;line-height:1.6;cursor:pointer}
   .dfield.empty{color:#AEB8B1}
   .dline .x{flex:none;width:38px;height:46px;border:none;background:none;color:var(--warn);font-size:20px;cursor:pointer}
-  .adddate{border:none;background:none;color:var(--brand);font-size:13px;font-weight:700;
-           font-family:inherit;padding:8px 2px 0;cursor:pointer}
+  .another{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .another span{font-size:12.5px;color:#56655C}
+  .adddate{border:1px solid #BFD8CB;background:var(--white);color:var(--brand);font-size:13px;font-weight:700;
+           font-family:inherit;padding:6px 12px;border-radius:16px;cursor:pointer}
 
   .more{background:#F7FAF8;border:1px solid var(--line);border-radius:10px;padding:2px 11px 11px;margin-top:9px}
   .more .fl{margin-top:9px}
@@ -105,7 +107,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>らくらく申請書くん</h1>
+    <h1>らくらく申請くん</h1>
     <p>出張ごとに1件ずつ。行はいくつでも増やせます</p>
   </header>
   <div class="msg hide" id="msg"></div>
@@ -135,7 +137,10 @@
     <div class="row-b">
       <span class="fl">出張開始・終了日 <em>／ 日帰りは同じ日を2回</em></span>
       <div class="dates r-dates"></div>
-      <button type="button" class="adddate r-adddate">＋ 同じ内容で別の日も追加</button>
+      <div class="another">
+        <span>別の日に同じ内容の出張がありましたか？</span>
+        <button type="button" class="adddate r-adddate">＋日付の追加</button>
+      </div>
 
       <span class="fl">出張先</span>
       <input type="text" class="r-place" placeholder="大阪府 大阪市／アメリカ ラスベガス">
@@ -193,7 +198,7 @@
 (function () {
   var LIFF_ID = '2011518319-ABM6yIOM';
   var HEADER  = '【旅費申請】';          // Code.gs が受け取る見出し（既存フォームと同じ）
-  var MARK    = '（らくらく申請書くんから送信）';   // Code.gs の isRakurakuText() が見る目印
+  var MARK    = '（らくらく申請くんから送信）';   // Code.gs の isRakurakuText() が見る目印
   var PREVIEW = /[?&]preview=1/.test(location.search);  // PCでの見た目確認用（送信しない）
 
   var CLS = {

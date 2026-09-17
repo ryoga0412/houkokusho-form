@@ -231,6 +231,8 @@
   var HEADER  = '【旅費申請】';          // Code.gs が受け取る見出し（既存フォームと同じ）
   var MARK    = '（らくらく申請くんから送信）';   // Code.gs の isRakurakuText() が見る目印
   var PREVIEW = /[?&]preview=1/.test(location.search);  // PCでの見た目確認用（送信しない）
+  // 受付先（Apps Script のウェブアプリ。LINEのWebhookと同じURL）
+  var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxs0WXzhbnHdfmlzjYGmGBqtN4SPxKATK18uD8O4lhX9lL9FuJ3paP775mjoQwfwDJO/exec';
 
   var CLS = {
     '飛行機': ['エコノミー', 'クラスJ（JAL）', 'ビジネス', 'ファースト'],
@@ -568,12 +570,13 @@
       r.scrollIntoView({ block: 'start', behavior: 'smooth' });
     };
 
-    var draft = '';
+    var draft = '', draftId = '';
     $('next').onclick = function () {
       var r = build();
       $('err').textContent = r.err || '';
       if (r.err) return;
       draft = r.text;
+      draftId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   // 二重送信よけの目印
       $('preview').textContent = draft;
       $('form').classList.add('hide');
       $('confirm').classList.remove('hide');
@@ -583,18 +586,35 @@
       $('confirm').classList.add('hide');
       $('form').classList.remove('hide');
     };
-    $('send').onclick = function () {
-      if (PREVIEW) { console.log(draft); show('プレビューのため送信していません。'); return; }
-      if (draft.length > 5000) { show('内容が長すぎて送れません（LINEの上限5000字）。出張を分けて送ってください。'); return; }
-      $('send').disabled = true;
-      $('send').textContent = '送信中…';
+    function failed(e) {
+      $('send').disabled = false;
+      $('send').textContent = '送信する';
+      show('送信できませんでした。もう一度お試しください。（' + e + '）');
+    }
+    /* 従来の送り方：トークに申請文を送る（受付カードは返信で届く） */
+    function viaTalk() {
+      if (draft.length > 5000) { failed('内容が長すぎます。出張を分けて送ってください'); return; }
       liff.sendMessages([{ type: 'text', text: draft }])
         .then(function () { liff.closeWindow(); })
-        .catch(function (e) {
-          $('send').disabled = false;
-          $('send').textContent = '送信する';
-          show('送信できませんでした。もう一度お試しください。（' + e + '）');
-        });
+        .catch(failed);
+    }
+    /* 通常：受付先へ直接送る。トークに申請文は出ず、受付カードだけが届く */
+    $('send').onclick = function () {
+      if (PREVIEW) { console.log(draft); show('プレビューのため送信していません。'); return; }
+      $('send').disabled = true;
+      $('send').textContent = '送信中…';
+      fetch(EXEC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // この形なら事前確認なしで送れる
+        body: JSON.stringify({ type: 'rakuraku', id: draftId, accessToken: liff.getAccessToken(), text: draft })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (j.ok) { liff.closeWindow(); return; }
+          if (j.fallback) { viaTalk(); return; }   // 送信数の上限などで届けられなかったとき
+          failed(j.error || 'error');
+        })
+        .catch(function () { viaTalk(); });   // 受付先につながらないとき
     };
     $('form').classList.remove('hide');
   }

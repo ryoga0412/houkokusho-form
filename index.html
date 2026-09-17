@@ -128,9 +128,12 @@
       <div id="e_segs"></div>
       <button type="button" class="add" id="e_addseg">＋ 移動を追加</button>
 
-      <span class="fl">宿泊 <em>／ 日帰りなら削除してください</em></span>
-      <div id="e_stays"></div>
-      <button type="button" class="add" id="e_addstay">＋ 宿泊を追加</button>
+      <!-- 宿泊：出張期間が泊まり（開始日と最終日が別の日）のときだけ出す -->
+      <div id="e_staybox" class="hide">
+        <span class="fl">宿泊 <em>／ 泊まりの出張のときだけ</em></span>
+        <div id="e_stays"></div>
+        <button type="button" class="add" id="e_addstay">＋ 宿泊を追加</button>
+      </div>
     </div>
 
     <!-- 出張報告 -->
@@ -341,8 +344,7 @@
     $('title').textContent = '旅費申請';
     $('expense').classList.remove('hide');
     bindField($('e_period'), 'trip', '日付を選ぶ');
-    addSeg(); addSeg();
-    addStay();
+    addSeg(); addSeg();   // 宿泊の欄は、泊まりの期間を選んだときに出す
     $('e_addseg').onclick = function () { addSeg(); };
     $('e_addstay').onclick = function () { addStay(); };
   }
@@ -426,6 +428,11 @@
     var r = tripRange();
     if (!r.from) return;
 
+    // 日帰りなら宿泊の欄は出さない。泊まりなら出して、1件目を用意する
+    var overnight = r.to !== r.from;
+    $('e_staybox').classList.toggle('hide', !overnight);
+    if (overnight && !$('e_stays').children.length) { addStay(); return; }   // addStay の中でもう一度ここに来る
+
     var segs = $('e_segs').children;
     Array.prototype.forEach.call(segs, function (w, i) {
       var d = w.querySelector('.s-date');
@@ -477,7 +484,8 @@
     segs.forEach(function (s) { L.push('・' + s); });
 
     var stays = [];
-    Array.prototype.forEach.call($('e_stays').children, function (w) {
+    var stayShown = !$('e_staybox').classList.contains('hide');
+    Array.prototype.forEach.call(stayShown ? $('e_stays').children : [], function (w) {
       var nm = esc(w.querySelector('.h-name').value);
       if (!nm) return;
       var d = w.querySelector('.h-period');
@@ -489,7 +497,7 @@
       stays.push(s);
     });
     if (stays.length) { L.push('宿泊先：'); stays.forEach(function (s) { L.push('・' + s); }); }
-    else L.push('宿泊先：なし（日帰り）');
+    else L.push('宿泊先：なし' + (r.to === r.from ? '（日帰り）' : ''));
 
     return { text: L.join('\n') };
   }

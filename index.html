@@ -122,7 +122,7 @@
       <button type="button" class="dfield empty" id="e_period">日付を選ぶ</button>
 
       <span class="fl">出張先</span>
-      <input type="text" id="e_place" placeholder="大阪府 大阪市／アメリカ ラスベガス">
+      <input type="text" id="e_place" placeholder="品川／ゴルフ場名／現場名">
 
       <span class="fl">移動 <em>／ 行きと帰りをそれぞれ</em></span>
       <div id="e_segs"></div>
@@ -146,7 +146,7 @@
 
       <span class="fl" id="r_bodylabel">日ごとの出張内容</span>
       <div id="r_days"></div>
-      <textarea id="r_all" class="hide" placeholder="出張中にされたことを、まとめて書いてください"></textarea>
+      <textarea id="r_all" class="hide" placeholder="〇〇社との打合せ、現場の立会い　など"></textarea>
 
       <span class="fl">決まったこと・成果</span>
       <textarea id="r_result" placeholder="単価改定は4月から／見積りは今月中に受領　など"></textarea>
@@ -188,8 +188,8 @@
   });
   var mode = (q.t === 'report') ? 'report' : 'expense';
 
-  var MEANS = ['飛行機', '新幹線', '在来線', '自家用車', 'バス'];
-  var PAY    = ['個人支払い', '法人支払い', '支払いなし'];   // 既定は個人支払い
+  var MEANS = ['飛行機', '新幹線', '在来線', '車', 'バス'];
+  var PAY    = ['個人', '法人', '支払なし'];   // 既定は個人（日帰り出張くんと同じ呼び方）
   var CLS_JAL  = ['エコノミー', 'クラスJ', 'ファースト'];
   var CLS_AIR  = ['エコノミー', 'ビジネス', 'ファースト'];
   var CLS_TRAIN= ['自由席', '指定席', 'グリーン', 'グランクラス'];
@@ -359,9 +359,9 @@
       '<div class="card-h"><b></b><button type="button">削除</button></div>' +
       '<div class="two"><select class="s-mean"></select>' +
       '<button type="button" class="dfield empty s-date"></button></div>' +
-      '<div class="two"><input type="text" class="s-from" placeholder="発（東京・羽田）">' +
-      '<span>→</span><input type="text" class="s-to" placeholder="着（大阪・伊丹）"></div>' +
-      '<input type="text" class="s-name" placeholder="便名・列車名（JAL031／のぞみ）">' +
+      '<div class="two"><input type="text" class="s-from" placeholder="発（羽田）">' +
+      '<span>→</span><input type="text" class="s-to" placeholder="着（伊丹）"></div>' +
+      '<input type="text" class="s-name" placeholder="例：JAL〇〇便">' +
       '<select class="s-cls"></select>' +
       '<select class="s-pay"></select>';
 
@@ -369,7 +369,7 @@
     var cls = w.querySelector('.s-cls'), pay = w.querySelector('.s-pay');
     opt(mean, MEANS, '移動手段');
     opt(pay, PAY);
-    pay.value = '個人支払い';
+    pay.value = '個人';
     bindField(w.querySelector('.s-date'), 'one', '利用日');
 
     function refresh() {
@@ -378,6 +378,7 @@
       name.classList.toggle('hide', !need);
       cls.classList.toggle('hide', !need);
       if (!need) { name.value = ''; cls.value = ''; return; }
+      name.placeholder = (m === '新幹線') ? '例：のぞみ〇〇号' : '例：JAL〇〇便';   // 日帰り出張くんと同じ例
       var list = (m === '新幹線') ? CLS_TRAIN
                : /^(JL|JAL)/i.test(name.value) ? CLS_JAL : CLS_AIR;
       var cur = cls.value;
@@ -402,12 +403,12 @@
     w.className = 'card';
     w.innerHTML =
       '<div class="card-h"><b></b><button type="button">削除</button></div>' +
-      '<input type="text" class="h-name" placeholder="ホテル名">' +
+      '<input type="text" class="h-name" placeholder="ホテル名（ヒルトン大阪）">' +
       '<button type="button" class="dfield empty h-period"></button>' +
       '<select class="h-pay"></select>';
     var pay = w.querySelector('.h-pay');
     opt(pay, PAY);
-    pay.value = '個人支払い';
+    pay.value = '個人';
     bindField(w.querySelector('.h-period'), 'stay', '宿泊期間を選ぶ');
     w.querySelector('.card-h button').onclick = function () {
       w.remove();
@@ -511,7 +512,7 @@
       var box = document.createElement('div');
       box.className = 'day';
       box.innerHTML = '<div class="day-h">' + (d ? md(d) : ('その日にされたこと ' + (i + 1))) + '</div>' +
-                      '<textarea placeholder="この日にされたことを書いてください"></textarea>';
+                      '<textarea placeholder="〇〇社との打合せ、現場の立会い　など"></textarea>';
       box.setAttribute('data-d', d ? md(d) : '');
       $('r_days').appendChild(box);
     });

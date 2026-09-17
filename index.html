@@ -179,6 +179,8 @@
 <script>
 (function () {
   var LIFF_ID = '2011518319-ABM6yIOM';
+  // 受付先（Apps Script のウェブアプリ。LINEのWebhookと同じURL）
+  var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxs0WXzhbnHdfmlzjYGmGBqtN4SPxKATK18uD8O4lhX9lL9FuJ3paP775mjoQwfwDJO/exec';
 
   var q = {};
   location.search.replace(/^\?/, '').split('&').forEach(function (p) {
@@ -568,18 +570,37 @@
     if (mode === 'report') buildReport(); else buildExpense();
     $('form').classList.remove('hide');
 
+    function failed(e) {
+      $('send').disabled = false;
+      $('send').textContent = 'この内容で送る';
+      show('送信できませんでした。もう一度お試しください。（' + e + '）');
+    }
+    /* 従来の送り方：トークに申請文を送る */
+    function viaTalk(text) {
+      liff.sendMessages([{ type: 'text', text: text }])
+        .then(function () { liff.closeWindow(); })
+        .catch(failed);
+    }
+
     $('send').onclick = function () {
       var r = (mode === 'report') ? reportText() : expenseText();
       if (r.err) { alert(r.err); return; }
       $('send').disabled = true;
-      $('send').textContent = '送信中…';
-      liff.sendMessages([{ type: 'text', text: r.text }])
-        .then(function () { liff.closeWindow(); })
-        .catch(function (e) {
-          $('send').disabled = false;
-          $('send').textContent = 'この内容で送る';
-          show('送信できませんでした。もう一度お試しください。（' + e + '）');
-        });
+      $('send').textContent = '送信中…（少しお待ちください）';
+      /* 通常：受付先へ直接送る。トークに申請文は出さず、AIの返事だけが届く（日帰り出張くんと同じ） */
+      var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   // 二重送信よけの目印
+      fetch(EXEC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ type: 'ai_form', id: id, accessToken: liff.getAccessToken(), text: r.text })
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (j) {
+          if (j.ok) { liff.closeWindow(); return; }
+          if (j.fallback) { viaTalk(r.text); return; }   // 送信数の上限が近いときなど
+          failed(j.error || 'error');
+        })
+        .catch(function () { viaTalk(r.text); });   // 受付先につながらないとき
     };
   }).catch(function (e) { show('起動に失敗しました。（' + e + '）'); });
 })();

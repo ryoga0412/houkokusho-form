@@ -173,10 +173,19 @@
 
       <span class="fl">決まったこと・成果</span>
       <textarea id="r_result" placeholder="単価改定は4月から／見積りは今月中に受領　など"></textarea>
+
+      <span class="fl">AIによる申請サポート</span>
+      <div class="seg2" id="r_ai">
+        <div class="on" data-v="on">必要</div>
+        <div data-v="off">不要</div>
+      </div>
+      <div class="hint" style="text-align:left;margin-top:6px">
+        ＊より詳細な出張報告を作成するために、AIが質問します。
+      </div>
     </div>
 
     <button type="button" class="submit" id="send">この内容で送る</button>
-    <div class="hint">送信後、足りないところだけLINEでお伺いします。</div>
+    <div class="hint" id="r_note">送信後、足りないところだけLINEでお伺いします。</div>
   </main>
 </div>
 
@@ -665,6 +674,7 @@
 
   /* ============ 出張報告 ============ */
   var rMode = 'day';
+  var rAi = 'on';   // AIによる申請サポート。'on' = 必要 / 'off' = 不要
 
   function buildReport() {
     $('title').textContent = '出張報告';
@@ -700,11 +710,28 @@
       };
     });
 
+    // AIによる申請サポート。1件ごとに必要／不要を選ぶ
+    Array.prototype.forEach.call($('r_ai').children, function (b) {
+      b.onclick = function () {
+        Array.prototype.forEach.call($('r_ai').children, function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+        rAi = b.getAttribute('data-v');
+        var note = $('r_note');
+        if (note) {
+          note.textContent = (rAi === 'on')
+            ? '送信後、足りないところだけLINEでお伺いします。'
+            : 'いただいた内容だけで報告書をお作りします。';
+        }
+      };
+    });
+
     $('report').classList.remove('hide');
   }
 
   function reportText() {
     var L = ['【出張報告】'];
+    // 「不要」のときは目印を付ける。受け取った側が質問を飛ばす
+    if (rAi === 'off') L.push('※質問不要');
     var pur = esc($('r_purpose').value);
     if (pur) L.push('目的：' + pur);
 

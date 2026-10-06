@@ -788,21 +788,33 @@
       if (mode !== 'report') remember();   // 次回のために、使った場所をこの端末に覚えておく
       if (PREVIEW) { console.log(r.text); show('プレビューのため送信していません。'); return; }
       $('send').disabled = true;
-      $('send').textContent = '送信中…（少しお待ちください）';
-      /* 通常：受付先へ直接送る。トークに申請文は出さず、AIの返事だけが届く（日帰り出張くんと同じ） */
+      $('send').textContent = '送信中…';
+      /* 通常：受付先へ直接送る。トークに申請文は出さず、AIの返事だけが届く */
       var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   // 二重送信よけの目印
+      var closed = false;
+      function bye() { if (!closed) { closed = true; liff.closeWindow(); } }
+      // 受付の返事を待たずに画面を閉じる。カードはトークに届くので、ここで待たせない。
+      // つながらない失敗は1秒以内に分かるので、1.2秒だけ待ってから閉じる。
+      var timer = setTimeout(bye, 1200);
       fetch(EXEC_URL, {
         method: 'POST',
+        keepalive: true,   // 画面を閉じたあとも送信は続く
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ type: 'ai_form', id: id, accessToken: liff.getAccessToken(), text: r.text })
       })
         .then(function (res) { return res.json(); })
         .then(function (j) {
-          if (j.ok) { liff.closeWindow(); return; }
+          clearTimeout(timer);
+          if (j.ok) { bye(); return; }
+          if (closed) return;
           if (j.fallback) { viaTalk(r.text); return; }   // 送信数の上限が近いときなど
           failed(j.error || 'error');
         })
-        .catch(function () { viaTalk(r.text); });   // 受付先につながらないとき
+        .catch(function () {
+          clearTimeout(timer);
+          if (closed) return;
+          viaTalk(r.text);   // 受付先につながらないとき
+        });
     };
   }).catch(function (e) { show('起動に失敗しました。（' + e + '）'); });
 })();

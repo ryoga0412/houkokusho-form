@@ -1460,6 +1460,10 @@
   window.__xTail = function () {
     var o = oldTail ? oldTail() : [];
     if (asked) o.push('海外便の見積り：取得を依頼する（1,000円・税込）');
+    var mi = $('x_mitsu');
+    if (mi && mi.querySelectorAll('.phs .t.done').length) {
+      o.push('海外便の見積り：添付あり（' + mi.querySelectorAll('.phs .t.done').length + '件）');
+    }
     var n = document.querySelectorAll('.phwrap .phs .t.done').length;
     if (n) o.push('証憑：' + n + '件　' + FOLDER);
     return o;

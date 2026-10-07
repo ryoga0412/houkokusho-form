@@ -154,6 +154,20 @@
 .xol { font-size: 12.5px; font-weight: 700; color: #6E7B74; margin: 0 0 9px; }
 .xnote { font-size: 11.5px; color: #6E7B74; margin: 9px 0 0; line-height: 1.7; }
 
+
+/* 書き終えた移動・宿泊を1行にたたむ */
+.x-sum { display: none; align-items: center; gap: 10px; cursor: pointer; }
+#expense .card.folded { padding-top: 12px; padding-bottom: 12px; }
+#expense .card.folded > *:not(.x-sum) { display: none !important; }
+#expense .card.folded .x-sum { display: flex; }
+.x-sum .ic { width: 34px; height: 34px; border-radius: 10px; background: #E8F3ED; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.x-sum .tx { flex: 1; min-width: 0; }
+.x-sum .tx b { display: block; font-size: 14px; color: #141A17; }
+.x-sum .tx i { display: block; font-style: normal; font-size: 12.5px; color: #6E7B74; margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.x-sum .ed { font-size: 12.5px; color: #0A7A45; font-weight: 700; flex-shrink: 0; }
+
 </style>
 </head>
 <body>
@@ -1072,6 +1086,85 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
+})();
+</script>
+
+
+<script>
+/* ===== 書き終えたカードを1行にたたむ（2026-10 追加） ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var ICON = { '飛行機': '\u2708\uFE0F', '新幹線': '\uD83D\uDE85', '在来線': '\uD83D\uDE83', '車': '\uD83D\uDE97', 'バス': '\uD83D\uDE8C' };
+  var WD = ['日', '月', '火', '水', '木', '金', '土'];
+
+  function md(iso) {
+    if (!iso) return '';
+    var d = new Date(iso + 'T00:00:00');
+    if (isNaN(d.getTime())) return '';
+    return (d.getMonth() + 1) + '/' + d.getDate() + '（' + WD[d.getDay()] + '）';
+  }
+  function on(box) { var o = box && box.querySelector('.on'); return o ? o.getAttribute('data-v') : ''; }
+  function val(el) { return el ? (el.value || '').trim() : ''; }
+  function title(card, fb) {
+    var b = card.querySelector('.card-h b');
+    return (b && b.textContent.trim()) || fb;
+  }
+
+  function segInfo(card) {
+    var mean = on(card.querySelector('.s-mean'));
+    var dt = card.querySelector('.s-date');
+    var dv = dt ? (dt.getAttribute('data-from') || '') : '';
+    var a = val(card.querySelector('.s-from'));
+    var b = val(card.querySelector('.s-to'));
+    if (!mean || !dv || !a || !b) return null;
+    return { ic: ICON[mean] || '\uD83D\uDE83', t: title(card, '移動') + ' ' + mean, l: md(dv) + '　' + a + ' → ' + b };
+  }
+  function stayInfo(card) {
+    var nm = val(card.querySelector('.h-name'));
+    var p = card.querySelector('.h-period');
+    var f = p ? (p.getAttribute('data-from') || '') : '';
+    var t = p ? (p.getAttribute('data-to') || '') : '';
+    if (!nm || !f) return null;
+    return { ic: '\uD83C\uDFE8', t: title(card, '宿泊') + ' ' + nm, l: md(f) + (t && t !== f ? ' 〜 ' + md(t) : '') };
+  }
+
+  function fold(card, info) {
+    var s = card.querySelector('.x-sum');
+    if (!s) {
+      s = document.createElement('div');
+      s.className = 'x-sum';
+      s.innerHTML = '<span class="ic"></span><span class="tx"><b></b><i></i></span><span class="ed">編集</span>';
+      s.addEventListener('click', function () { card.classList.remove('folded'); });
+      card.insertBefore(s, card.firstChild);
+    }
+    s.querySelector('.ic').textContent = info.ic;
+    s.querySelector('.tx b').textContent = info.t;
+    s.querySelector('.tx i').textContent = info.l;
+    card.classList.add('folded');
+  }
+
+  function sweep(skip) {
+    var cal = $('cal');
+    if (cal && !cal.classList.contains('hide')) return;   /* カレンダーが開いている間は触らない */
+    [[$('e_segs'), segInfo], [$('e_stays'), stayInfo]].forEach(function (pair) {
+      var box = pair[0], info = pair[1];
+      if (!box) return;
+      Array.prototype.forEach.call(box.children, function (c) {
+        if (c.classList.contains('folded')) return;
+        if (skip && c.contains(skip)) return;
+        var d = info(c);
+        if (d) fold(c, d);
+      });
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('.x-sum')) return;
+    setTimeout(function () { sweep(e.target); }, 0);
+  });
+  document.addEventListener('focusin', function (e) {
+    setTimeout(function () { sweep(e.target); }, 0);
+  });
 })();
 </script>
 

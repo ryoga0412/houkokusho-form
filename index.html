@@ -206,7 +206,7 @@
 /* まとまりごと、見出しを押して閉じる */
 #expense .fl.xhead { display: flex; align-items: center; width: 100%; cursor: pointer; }
 #expense .fl.xhead .xcv { margin-left: auto; color: #9AA6A0; font-size: 12px; font-weight: 700; }
-#expense .xbox.xfold { display: none; }
+.xfold > *:not(.fl):not(.xsum2) { display: none !important; }
 .xsum2 { background: #fff; border: 1px solid #E4E8E6; border-radius: 14px; padding: 13px 14px;
   margin: 0 0 14px; font-size: 13.5px; color: #6E7B74; cursor: pointer;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -253,7 +253,7 @@ body { background: #E9EDEB; }
 #expense .bsec .xbox { background: #FBFCFB; border-color: #EDF1EF; }
 #expense .bsec .card { background: #FBFCFB; }
 /* 進み具合 */
-.bprog { display: flex; align-items: center; gap: 10px; margin: 2px 0 14px; }
+.bprog { display: flex; align-items: center; gap: 10px; margin: 2px 0 14px; padding: 0 4px; }
 .bprog .bar { flex: 1; height: 6px; border-radius: 99px; background: #D7DEDA; overflow: hidden; }
 .bprog .bar i { display: block; height: 100%; width: 0; background: #0A7A45; border-radius: 99px;
   transition: width .35s ease; }
@@ -1637,7 +1637,7 @@ body { background: #E9EDEB; }
 /* ===== 出張する会社と人／費用の負担／出張の内容 を、見出しで開け閉め ===== */
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var SECT = ['出張する会社と人', '費用の負担', '出張の内容'];
+  var SECT = ['出張する会社と人', '費用の負担', '出張の内容', '移動', '宿泊'];
 
   function chips(id) {
     var b = $(id);
@@ -1657,6 +1657,30 @@ body { background: #E9EDEB; }
       if (a && a.value) o.push('交通費 ' + a.value);
       if (b && b.value) o.push('宿泊費 ' + b.value);
       return o.join('　・　');
+    }
+    if (nm === '移動') {
+      var sg = $('e_segs');
+      if (!sg) return '';
+      var items = [];
+      Array.prototype.forEach.call(sg.children, function (c) {
+        var on = c.querySelector('.s-mean .on');
+        var mm = on ? on.getAttribute('data-v') : '';
+        var aa = (c.querySelector('.s-from') || {}).value || '';
+        var bb = (c.querySelector('.s-to') || {}).value || '';
+        if (mm && aa.trim() && bb.trim()) items.push(mm + ' ' + aa.trim() + '→' + bb.trim());
+      });
+      if (!items.length) return '';
+      return items[0] + (items.length > 1 ? '　ほか' + (items.length - 1) + '件' : '');
+    }
+    if (nm === '宿泊') {
+      var sy = $('e_stays');
+      if (!sy) return '';
+      var ns = [];
+      Array.prototype.forEach.call(sy.children, function (c) {
+        var v = ((c.querySelector('.h-name') || {}).value || '').trim();
+        if (v) ns.push(v);
+      });
+      return ns.join('／');
     }
     var p = $('e_period'), pl = $('e_place');
     var out = [];
@@ -1683,8 +1707,7 @@ body { background: #E9EDEB; }
     Array.prototype.forEach.call(ex.querySelectorAll('span.fl'), function (fl) {
       var nm = (fl.textContent || '').trim();
       if (SECT.indexOf(nm) < 0 || fl.__fold) return;
-      var box = fl.nextElementSibling;
-      while (box && !box.classList.contains('xbox')) box = box.nextElementSibling;
+      var box = fl.parentNode;
       if (!box) return;
       fl.__fold = true;
       fl.classList.add('xhead');
@@ -1694,15 +1717,38 @@ body { background: #E9EDEB; }
       fl.appendChild(cv);
       var sum = document.createElement('div');
       sum.className = 'xsum2 hide';
-      box.parentNode.insertBefore(sum, box);
+      box.insertBefore(sum, fl.nextSibling);
       var go = function () { toggle(fl, box, sum); };
       fl.onclick = go;
       sum.onclick = go;
     });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
-  else setup();
+  /* すでに書けているかたまりは、最初から閉じておく。空のものは開いたまま */
+  var tidied = false;
+  function tidy() {
+    if (tidied) return;
+    var ex = $('expense'), rp = $('report');
+    var live = (ex && !ex.classList.contains('hide')) || (rp && !rp.classList.contains('hide'));
+    if (!live) return;
+    tidied = true;
+    Array.prototype.forEach.call(document.querySelectorAll('.fl.xhead'), function (fl) {
+      var box = fl.parentNode;
+      var sum = box.querySelector('.xsum2');
+      if (!sum) return;
+      var nm = (fl.firstChild && fl.firstChild.textContent || '').trim();
+      if (summary(nm)) toggle(fl, box, sum);
+    });
+  }
+
+  function boot() {
+    setup();
+    setTimeout(tidy, 400);
+    setTimeout(tidy, 1500);
+    setTimeout(tidy, 3000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 

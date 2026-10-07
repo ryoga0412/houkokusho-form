@@ -168,6 +168,36 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .x-sum .ed { font-size: 12.5px; color: #0A7A45; font-weight: 700; flex-shrink: 0; }
 
+
+/* 写真の添付（証憑） */
+.phwrap { margin-top: 12px; }
+.phbtn { width: 100%; height: 50px; border: 1.5px dashed #C9D4CE; border-radius: 12px; background: #fff;
+  color: #0A7A45; font-size: 14px; font-weight: 700; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 7px; }
+.phs { display: flex; gap: 10px; flex-wrap: wrap; }
+.phs .t { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+.phs .t .im { display: block; width: 100%; height: 100%; border-radius: 10px; background: #DCE4E0; object-fit: cover; }
+.phs .t .rm { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; border: 1px solid #E4E8E6; font-size: 12px; color: #6E7B74;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.phs .t .st { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border-radius: 10px;
+  background: rgba(255,255,255,.72); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #6E7B74; }
+.phs .t.done .st { display: none; }
+.phs .t.ng .st { background: rgba(192,57,43,.16); color: #C0392B; }
+.phs .more { width: 64px; height: 64px; border-radius: 10px; border: 1.5px dashed #C9D4CE; background: #fff;
+  color: #0A7A45; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.x-sum .clip { font-size: 12px; color: #6E7B74; font-weight: 700; flex-shrink: 0; margin-right: 4px; }
+/* 海外便の見積り */
+.ask2 { width: 100%; height: 52px; border: 1.5px solid #E4E8E6; border-radius: 12px; background: #fff;
+  color: #141A17; font-size: 14.5px; font-weight: 700; font-family: inherit; margin-top: 10px; }
+.fee { font-size: 11.5px; color: #6E7B74; margin: 7px 0 0; text-align: center; }
+.asked { display: flex; align-items: center; gap: 10px; background: #0A7A45; border-radius: 12px;
+  padding: 14px 15px; font-size: 14.5px; font-weight: 700; color: #fff; margin-top: 10px; }
+.asked .nm { flex: 1; min-width: 0; }
+.asked .nm small { display: block; font-size: 11.5px; font-weight: 600; opacity: .85; margin-top: 2px; }
+.asked .x { font-size: 12.5px; font-weight: 700; opacity: .9; }
+
 </style>
 </head>
 <body>
@@ -217,6 +247,23 @@
 
       <span class="fl">出張期間</span>
       <button type="button" class="dfield empty" id="e_period">日付を選ぶ</button>
+
+      <span class="fl">出張区分</span>
+      <select id="x_kubun">
+        <option value="">選んでください</option>
+        <option>近距離出張</option>
+        <option>遠距離出張</option>
+        <option>海外出張</option>
+      </select>
+
+      <div id="x_kaigai" class="hide">
+        <span class="fl">海外便の見積り</span>
+        <div class="xbox">
+          <div class="phwrap" id="x_mitsu" data-btn="見積りを添付"></div>
+          <div id="x_ask"></div>
+        </div>
+      </div>
+
 
       <span class="fl">出張先</span>
       <input type="text" id="e_place" placeholder="品川／ゴルフ場名／現場名">
@@ -1165,6 +1212,216 @@
   document.addEventListener('focusin', function (e) {
     setTimeout(function () { sweep(e.target); }, 0);
   });
+})();
+</script>
+
+
+<script>
+/* ===== 出張区分・海外の見積り・証憑の写真（2026-10 追加） ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var EXEC = (function () {
+    var s = document.getElementsByTagName('script');
+    for (var i = 0; i < s.length; i++) {
+      var m = (s[i].textContent || '').match(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec/);
+      if (m) return m[0];
+    }
+    return '';
+  })();
+  var REQ = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  var FOLDER = '';
+  var asked = false;
+
+  function token() { try { return (window.liff && liff.getAccessToken) ? (liff.getAccessToken() || '') : ''; } catch (e) { return ''; } }
+
+  /* 送る前に小さくする。搭乗券の文字が読めれば十分 */
+  function shrink(file, cb) {
+    if (!/^image\//.test(file.type || '')) {
+      var fr = new FileReader();
+      fr.onload = function () { cb(String(fr.result).split(',')[1], file.type || 'application/octet-stream', file.name, ''); };
+      fr.onerror = function () { cb(null); };
+      fr.readAsDataURL(file);
+      return;
+    }
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function () {
+      var max = 1600, w = img.naturalWidth, h = img.naturalHeight;
+      var r = Math.min(1, max / Math.max(w, h));
+      var c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(w * r));
+      c.height = Math.max(1, Math.round(h * r));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      var d = c.toDataURL('image/jpeg', 0.8);
+      cb(d.split(',')[1], 'image/jpeg', String(file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg', d);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+    img.src = url;
+  }
+
+  function addPhoto(wrap, file) {
+    var label = wrap.getAttribute('data-label') || '証憑';
+    var t = document.createElement('div');
+    t.className = 't';
+    t.innerHTML = '<img class="im"><span class="st">送信中</span><span class="rm">×</span>';
+    t.querySelector('.rm').onclick = function () { t.remove(); render(wrap); paintClips(); };
+    var phs = wrap.querySelector('.phs');
+    phs.insertBefore(t, phs.querySelector('.more'));
+    render(wrap);
+    shrink(file, function (b64, mime, name, preview) {
+      if (preview) t.querySelector('.im').src = preview;
+      function ng(msg) { t.classList.add('ng'); t.querySelector('.st').textContent = msg || '失敗'; }
+      if (!b64) { ng(); return; }
+      fetch(EXEC, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ type: 'upload', reqId: REQ, accessToken: token(), label: label, name: name, mime: mime, data: b64 })
+      }).then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (j && j.ok) { if (j.folder) FOLDER = j.folder; t.classList.add('done'); paintClips(); }
+          else ng();
+        })
+        .catch(function () { ng(); });
+    });
+  }
+
+  function render(wrap) {
+    var n = wrap.querySelectorAll('.phs .t').length;
+    wrap.querySelector('.phbtn').style.display = n ? 'none' : '';
+    wrap.querySelector('.phs').style.display = n ? 'flex' : 'none';
+  }
+
+  function ensure(wrap, label) {
+    if (wrap.__done) { wrap.setAttribute('data-label', label); return; }
+    wrap.__done = true;
+    wrap.setAttribute('data-label', label);
+    var inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'image/*,application/pdf';
+    inp.multiple = true;
+    inp.style.display = 'none';
+    inp.onchange = function () {
+      Array.prototype.forEach.call(inp.files || [], function (f) { addPhoto(wrap, f); });
+      inp.value = '';
+    };
+    wrap.appendChild(inp);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'phbtn';
+    btn.textContent = '\uD83D\uDCCE\u3000' + (wrap.getAttribute('data-btn') || '写真を添付');
+    btn.onclick = function () { inp.click(); };
+    wrap.appendChild(btn);
+    var phs = document.createElement('div');
+    phs.className = 'phs';
+    phs.innerHTML = '<div class="more">＋</div>';
+    phs.querySelector('.more').onclick = function () { inp.click(); };
+    wrap.appendChild(phs);
+    render(wrap);
+  }
+
+  /* たたんだ行にクリップと枚数を出す */
+  function paintClips() {
+    var all = document.querySelectorAll('#e_segs .card, #e_stays .card');
+    Array.prototype.forEach.call(all, function (c) {
+      var s = c.querySelector('.x-sum');
+      if (!s) return;
+      var n = c.querySelectorAll('.phwrap .phs .t').length;
+      var clip = s.querySelector('.clip');
+      if (!n) { if (clip) clip.remove(); return; }
+      if (!clip) { clip = document.createElement('span'); clip.className = 'clip'; s.insertBefore(clip, s.querySelector('.ed')); }
+      clip.textContent = '\uD83D\uDCCE' + n;
+    });
+  }
+
+  function decorate() {
+    var segs = $('e_segs');
+    if (segs) Array.prototype.forEach.call(segs.children, function (c, i) {
+      var w = c.querySelector('.phwrap');
+      if (!w) {
+        w = document.createElement('div');
+        w.className = 'phwrap';
+        w.setAttribute('data-btn', '搭乗券・チケットを添付');
+        c.appendChild(w);
+      }
+      ensure(w, '移動' + (i + 1));
+    });
+    var stays = $('e_stays');
+    if (stays) Array.prototype.forEach.call(stays.children, function (c, i) {
+      var w = c.querySelector('.phwrap');
+      if (!w) {
+        w = document.createElement('div');
+        w.className = 'phwrap';
+        w.setAttribute('data-btn', '領収書・明細を添付');
+        var q = c.querySelector('.xquiet');
+        if (q) c.insertBefore(w, q); else c.appendChild(w);
+      }
+      ensure(w, '宿泊' + (i + 1));
+    });
+  }
+
+  function askBox() {
+    var box = $('x_ask');
+    if (!box) return;
+    if (asked) {
+      box.innerHTML = '<div class="asked"><span>\u2713</span><span class="nm">見積りの取得を依頼しました' +
+        '<small>1,000円（税込）／ 1出張あたり</small></span><span class="x">取り消す</span></div>';
+      box.querySelector('.x').onclick = function () { asked = false; askBox(); };
+    } else {
+      box.innerHTML = '<button type="button" class="ask2">見積りの取得を依頼する</button>' +
+        '<p class="fee">※1出張あたり 1,000円（税込）かかります</p>';
+      box.querySelector('.ask2').onclick = function () { asked = true; askBox(); };
+    }
+  }
+
+  function start() {
+    var k = $('x_kubun');
+    if (!k) return;
+    k.onchange = function () {
+      $('x_kaigai').classList.toggle('hide', k.value !== '海外出張');
+    };
+    ensure($('x_mitsu'), '見積');
+    askBox();
+    decorate();
+    var segs = $('e_segs'), stays = $('e_stays');
+    if (segs) new MutationObserver(decorate).observe(segs, { childList: true });
+    if (stays) new MutationObserver(decorate).observe(stays, { childList: true });
+    document.addEventListener('click', function () { setTimeout(paintClips, 40); });
+  }
+
+  /* 出張区分を選ばずに送らせない */
+  document.addEventListener('click', function (e) {
+    var el = e.target;
+    if (!el || !el.closest) return;
+    if (!el.closest('#send')) return;
+    var ex = $('expense');
+    if (!ex || ex.classList.contains('hide')) return;
+    if (!$('x_kubun').value) {
+      e.stopPropagation();
+      e.preventDefault();
+      alert('出張区分を選んでください。');
+    }
+  }, true);
+
+  /* 送信文に足すもの */
+  var oldHead = window.__xHead;
+  window.__xHead = function () {
+    var o = oldHead ? oldHead() : [];
+    var k = $('x_kubun');
+    if (k && k.value) o.push('出張区分：' + k.value);
+    return o;
+  };
+  var oldTail = window.__xTail;
+  window.__xTail = function () {
+    var o = oldTail ? oldTail() : [];
+    if (asked) o.push('海外便の見積り：取得を依頼する（1,000円・税込）');
+    var n = document.querySelectorAll('.phwrap .phs .t.done').length;
+    if (n) o.push('証憑：' + n + '件　' + FOLDER);
+    return o;
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();
 </script>
 

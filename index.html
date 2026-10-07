@@ -199,6 +199,14 @@
 .asked .nm small { display: block; font-size: 11.5px; font-weight: 600; opacity: .85; margin-top: 2px; }
 .asked .x { font-size: 12.5px; font-weight: 700; opacity: .9; }
 
+
+/* まとまりごと、見出しを押して閉じる */
+#expense .fl.xhead { display: flex; align-items: center; width: 100%; cursor: pointer; }
+#expense .fl.xhead .xcv { margin-left: auto; color: #9AA6A0; font-size: 12px; font-weight: 700; }
+#expense .xbox.xfold { display: none; }
+.xsum2 { background: #fff; border: 1px solid #E4E8E6; border-radius: 14px; padding: 13px 14px;
+  margin: 0 0 14px; font-size: 13.5px; color: #6E7B74; line-height: 1.6; cursor: pointer; }
+
 </style>
 </head>
 <body>
@@ -1442,6 +1450,81 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
+})();
+</script>
+
+
+<script>
+/* ===== 出張する会社と人／費用の負担／出張の内容 を、見出しで開け閉め ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var SECT = ['出張する会社と人', '費用の負担', '出張の内容'];
+
+  function chips(id) {
+    var b = $(id);
+    if (!b) return [];
+    return Array.prototype.map.call(b.children, function (c) {
+      return (c.firstChild && c.firstChild.textContent || '').trim();
+    }).filter(Boolean);
+  }
+
+  function summary(nm) {
+    if (nm === '出張する会社と人') {
+      return [chips('x_cos').join('／'), chips('x_pes').join('／')].filter(Boolean).join('　・　');
+    }
+    if (nm === '費用の負担') {
+      var a = $('x_bTrans'), b = $('x_bStay');
+      var o = [];
+      if (a && a.value) o.push('交通費 ' + a.value);
+      if (b && b.value) o.push('宿泊費 ' + b.value);
+      return o.join('　・　');
+    }
+    var p = $('e_period'), k = $('x_kubun'), pl = $('e_place');
+    var out = [];
+    if (p && !p.classList.contains('empty')) out.push(p.textContent.trim());
+    if (k && k.value) out.push(k.value);
+    if (pl && pl.value.trim()) out.push(pl.value.trim());
+    return out.join('　・　');
+  }
+
+  function toggle(fl, box, sum) {
+    var folded = box.classList.toggle('xfold');
+    fl.querySelector('.xcv').textContent = folded ? '▸' : '▾';
+    if (folded) {
+      var nm = (fl.firstChild && fl.firstChild.textContent || '').trim();
+      sum.textContent = summary(nm) || '（まだ入力されていません）';
+      sum.classList.remove('hide');
+    } else {
+      sum.classList.add('hide');
+    }
+  }
+
+  function setup() {
+    var ex = $('expense');
+    if (!ex) return;
+    Array.prototype.forEach.call(ex.querySelectorAll('span.fl'), function (fl) {
+      var nm = (fl.textContent || '').trim();
+      if (SECT.indexOf(nm) < 0 || fl.__fold) return;
+      var box = fl.nextElementSibling;
+      while (box && !box.classList.contains('xbox')) box = box.nextElementSibling;
+      if (!box) return;
+      fl.__fold = true;
+      fl.classList.add('xhead');
+      var cv = document.createElement('span');
+      cv.className = 'xcv';
+      cv.textContent = '▾';
+      fl.appendChild(cv);
+      var sum = document.createElement('div');
+      sum.className = 'xsum2 hide';
+      box.parentNode.insertBefore(sum, box);
+      var go = function () { toggle(fl, box, sum); };
+      fl.onclick = go;
+      sum.onclick = go;
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);
+  else setup();
 })();
 </script>
 

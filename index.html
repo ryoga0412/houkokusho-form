@@ -1538,7 +1538,16 @@ body { background: #E9EDEB; }
     var ticket = TICKET.indexOf(m) >= 0;
     var ph = card.querySelector('.phwrap');
     var fa = card.querySelector('.farewrap');
-    if (ph) ph.style.display = (m && ticket) ? '' : 'none';
+    if (ph) {
+      /* 添付はどの手段でも出す。どれも必須ではない */
+      ph.style.display = m ? '' : 'none';
+      var lb = ticket ? '搭乗券・チケットを添付' : '領収書を添付';
+      if (ph.getAttribute('data-btn') !== lb) {
+        ph.setAttribute('data-btn', lb);
+        var bt = ph.querySelector('.phbtn');
+        if (bt) bt.textContent = '\uD83D\uDCCE\u3000' + lb;
+      }
+    }
     if (fa) {
       fa.style.display = (m && !ticket) ? '' : 'none';
       fa.querySelector('.fl2').textContent = (m === '車') ? 'ETC代' : '金額';

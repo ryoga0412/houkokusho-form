@@ -1048,9 +1048,9 @@
     b.textContent = '＋ 規定額を超過した場合';
     var d = document.createElement('div');
     d.className = 'xover x-ov';
-    d.innerHTML = '<div class="xol">かかった宿泊費（1泊あたり）</div>' +
-      '<input type="text" class="h-over" inputmode="numeric" placeholder="18,000">' +
-      '<p class="xnote">規定額との差は担当者が計算します。<br>領収書は、いつもどおり別途お渡しください。</p>';
+    d.innerHTML = '<div class="xol">実際にかかった費用をご入力ください</div>' +
+      '<input type="text" class="h-over" inputmode="numeric" placeholder="120,000">' +
+      '<p class="xnote">領収書の添付をお願いいたします</p>';
     b.onclick = function () { d.classList.toggle('open'); };
     card.appendChild(b);
     card.appendChild(d);

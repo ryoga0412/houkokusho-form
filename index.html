@@ -138,17 +138,20 @@
 .xlab:first-child { margin-top: 0; }
 .xbox input[type=text], .xbox select { width: 100%; }
 .xbox .dfield { width: 100%; }
-.xchip { display: flex; align-items: center; gap: 8px; background: #E8F3ED; border-radius: 12px;
-  padding: 13px 15px; font-size: 15px; font-weight: 600; color: #066036; margin: 0 0 8px; }
-.xchip span { margin-left: auto; color: #0A7A45; font-size: 12.5px; font-weight: 700; }
+.xchip { display: inline-flex; align-items: center; gap: 7px; background: #E8F3ED; border-radius: 999px;
+  padding: 9px 13px; font-size: 14px; font-weight: 700; color: #066036; margin: 0; }
+.xchip span { color: #0A7A45; font-size: 15px; font-weight: 700; line-height: 1; }
+/* 選んだものと、前に使った候補を、同じ行にまとめて並べる */
+.xpick { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 9px; }
+#x_cos, #x_pes, .xrec { display: contents; }
 .xadd { display: flex; gap: 8px; margin: 0 0 10px; }
-.xadd input { flex: 1; }
+.xadd input { flex: 1; min-height: 46px; }
 .xadd button { flex-shrink: 0; width: 66px; border: 0; border-radius: 12px; background: #0A7A45;
   color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; }
 .xrecl { font-size: 11.5px; color: #9AA6A0; font-weight: 700; letter-spacing: .06em; margin: 2px 0 7px; }
 .xrec { display: flex; gap: 7px; flex-wrap: wrap; margin: 0 0 4px; }
-.xrec button { border: 1.5px solid #E4E8E6; background: #fff; border-radius: 999px; padding: 8px 13px;
-  font-size: 13px; font-weight: 600; color: #6E7B74; font-family: inherit; }
+.xrec button { border: 1.5px solid #D7E2DC; background: #fff; border-radius: 999px; padding: 9px 13px;
+  font-size: 14px; font-weight: 600; color: #6E7B74; font-family: inherit; }
 .xmini { font-size: 11.5px; color: #6E7B74; margin: 10px 0 0; line-height: 1.7; }
 .xquiet { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 4px 0; border: 0;
   background: none; color: #9AA6A0; font-size: 12.5px; font-weight: 600; font-family: inherit;
@@ -269,23 +272,16 @@ body { background: #E9EDEB; }
     <!-- 旅費申請 -->
     <div id="expense" class="hide">
 
-      <!-- 出張する会社と人 -->
-      <span class="fl">出張する会社と人</span>
+      <!-- 出張者 -->
+      <span class="fl">出張者</span>
       <div class="xbox">
-        <div class="xlab">報告者</div>
-        <input type="text" id="x_reporter" placeholder="お名前">
-
         <div class="xlab">会社</div>
-        <div id="x_cos"></div>
+        <div class="xpick"><div id="x_cos"></div><div class="xrec" id="x_coRec"></div></div>
         <div class="xadd"><input type="text" id="x_co" placeholder="会社名を入力"><button type="button" id="x_coAdd">追加</button></div>
-        <div class="xrecl">前に使った会社</div>
-        <div class="xrec" id="x_coRec"></div>
 
         <div class="xlab">出張者</div>
-        <div id="x_pes"></div>
+        <div class="xpick"><div id="x_pes"></div><div class="xrec" id="x_peRec"></div></div>
         <div class="xadd"><input type="text" id="x_pe" placeholder="出張者名を入力"><button type="button" id="x_peAdd">追加</button></div>
-        <div class="xrecl">前に使った出張者</div>
-        <div class="xrec" id="x_peRec"></div>
         <p class="xmini">旅費精算書は、出張者ごとに1通ずつお作りします。</p>
       </div>
 
@@ -1028,7 +1024,7 @@ body { background: #E9EDEB; }
       d.className = 'xchip';
       d.appendChild(document.createTextNode(n));
       var s = document.createElement('span');
-      s.textContent = '外す';
+      s.textContent = '×';
       s.onclick = function () { onX(i); };
       d.appendChild(s);
       box.appendChild(d);
@@ -1113,7 +1109,6 @@ body { background: #E9EDEB; }
     if (!$('x_cos')) return;
     cos = mem.co.slice(0, 1);
     pes = mem.me ? [mem.me] : [];
-    if (mem.me) $('x_reporter').value = mem.me;
 
     $('x_coAdd').onclick = function () { addFrom($('x_co'), cos, mem.co); };
     $('x_peAdd').onclick = function () { addFrom($('x_pe'), pes, mem.pe); };
@@ -1141,7 +1136,6 @@ body { background: #E9EDEB; }
           var n = (p && p.displayName || '').trim();
           if (!n) return;
           mem.me = n; save();
-          if (!$('x_reporter').value) $('x_reporter').value = n;
           if (pes.indexOf(n) < 0) { pes.unshift(n); draw(); }
         }).catch(function () {});
       } catch (e) {}
@@ -1628,10 +1622,10 @@ body { background: #E9EDEB; }
 
 
 <script>
-/* ===== 出張する会社と人／費用の負担／出張の内容 を、見出しで開け閉め ===== */
+/* ===== 出張者／費用の負担／出張の内容 を、見出しで開け閉め ===== */
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var SECT = ['出張する会社と人', '費用の負担', '出張の内容', '移動', '宿泊'];
+  var SECT = ['出張者', '費用の負担', '出張の内容', '移動', '宿泊'];
 
   function chips(id) {
     var b = $(id);
@@ -1642,7 +1636,7 @@ body { background: #E9EDEB; }
   }
 
   function summary(nm) {
-    if (nm === '出張する会社と人') {
+    if (nm === '出張者') {
       return [chips('x_cos').join('／'), chips('x_pes').join('／')].filter(Boolean).join('　・　');
     }
     if (nm === '費用の負担') {

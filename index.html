@@ -134,6 +134,7 @@
 .xlab { font-size: 12px; color: #6E7B74; font-weight: 700; letter-spacing: .06em; margin: 14px 0 8px; }
 .xlab:first-child { margin-top: 0; }
 .xbox input[type=text], .xbox select { width: 100%; }
+.xbox .dfield { width: 100%; }
 .xchip { display: flex; align-items: center; gap: 8px; background: #E8F3ED; border-radius: 12px;
   padding: 13px 15px; font-size: 15px; font-weight: 600; color: #066036; margin: 0 0 8px; }
 .xchip span { margin-left: auto; color: #0A7A45; font-size: 12.5px; font-weight: 700; }
@@ -245,28 +246,28 @@
         </div>
       </div>
 
-      <span class="fl">出張期間</span>
-      <button type="button" class="dfield empty" id="e_period">日付を選ぶ</button>
+      <span class="fl">出張の内容</span>
+      <div class="xbox">
+        <div class="xlab">出張期間</div>
+        <button type="button" class="dfield empty" id="e_period">日付を選ぶ</button>
 
-      <span class="fl">出張区分</span>
-      <select id="x_kubun">
-        <option value="">選んでください</option>
-        <option>近距離出張</option>
-        <option>遠距離出張</option>
-        <option>海外出張</option>
-      </select>
+        <div class="xlab">出張区分</div>
+        <select id="x_kubun">
+          <option value="">選んでください</option>
+          <option>近距離出張</option>
+          <option>遠距離出張</option>
+          <option>海外出張</option>
+        </select>
 
-      <div id="x_kaigai" class="hide">
-        <span class="fl">海外便の見積り</span>
-        <div class="xbox">
+        <div id="x_kaigai" class="hide">
+          <div class="xlab">海外便の見積り</div>
           <div class="phwrap" id="x_mitsu" data-btn="見積りを添付"></div>
           <div id="x_ask"></div>
         </div>
+
+        <div class="xlab">出張先</div>
+        <input type="text" id="e_place" placeholder="品川／ゴルフ場名／現場名">
       </div>
-
-
-      <span class="fl">出張先</span>
-      <input type="text" id="e_place" placeholder="品川／ゴルフ場名／現場名">
 
       <span class="fl">移動</span>
       <div id="e_segs"></div>
@@ -1157,22 +1158,26 @@
     return (b && b.textContent.trim()) || fb;
   }
 
-  function segInfo(card) {
+  function segInfo(card, force) {
     var mean = on(card.querySelector('.s-mean'));
     var dt = card.querySelector('.s-date');
     var dv = dt ? (dt.getAttribute('data-from') || '') : '';
     var a = val(card.querySelector('.s-from'));
     var b = val(card.querySelector('.s-to'));
-    if (!mean || !dv || !a || !b) return null;
-    return { ic: ICON[mean] || '\uD83D\uDE83', t: title(card, '移動') + ' ' + mean, l: md(dv) + '　' + a + ' → ' + b };
+    if (!force && (!mean || !dv || !a || !b)) return null;
+    return { ic: ICON[mean] || '\uD83D\uDE83',
+      t: title(card, '移動') + (mean ? ' ' + mean : ''),
+      l: (md(dv) || '日付？') + '　' + (a || '？') + ' → ' + (b || '？') };
   }
-  function stayInfo(card) {
+  function stayInfo(card, force) {
     var nm = val(card.querySelector('.h-name'));
     var p = card.querySelector('.h-period');
     var f = p ? (p.getAttribute('data-from') || '') : '';
     var t = p ? (p.getAttribute('data-to') || '') : '';
-    if (!nm || !f) return null;
-    return { ic: '\uD83C\uDFE8', t: title(card, '宿泊') + ' ' + nm, l: md(f) + (t && t !== f ? ' 〜 ' + md(t) : '') };
+    if (!force && (!nm || !f)) return null;
+    return { ic: '\uD83C\uDFE8',
+      t: title(card, '宿泊') + (nm ? ' ' + nm : ''),
+      l: (md(f) || '日付？') + (t && t !== f ? ' 〜 ' + md(t) : '') };
   }
 
   function fold(card, info) {
@@ -1211,6 +1216,21 @@
   });
   document.addEventListener('focusin', function (e) {
     setTimeout(function () { sweep(e.target); }, 0);
+  });
+
+  /* 見出しを押したら閉じる。書きかけでも閉じられる */
+  document.addEventListener('click', function (e) {
+    var el = e.target;
+    if (!el || !el.closest) return;
+    var h = el.closest('.card-h');
+    if (!h) return;
+    if (el.closest('button')) return;   /* 削除ボタンは別 */
+    var card = h.parentNode;
+    var isSeg = !!card.closest('#e_segs');
+    var isStay = !!card.closest('#e_stays');
+    if (!isSeg && !isStay) return;
+    var info = isSeg ? segInfo(card, true) : stayInfo(card, true);
+    if (info) fold(card, info);
   });
 })();
 </script>

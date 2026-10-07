@@ -1742,9 +1742,7 @@ body { background: #E9EDEB; }
     setup();
     setTimeout(setup, 300);
     setTimeout(setup, 900);
-    setTimeout(tidy, 1300);
-    setTimeout(tidy, 2500);
-    setTimeout(tidy, 4000);
+    /* 自動でたたむのはやめた。最初は全部開いたままにする */
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

@@ -126,6 +126,9 @@
 
 /* ===== 旅費申請 2026-10 改訂 ===== */
 #expense input[type=text], #expense .dfield, #expense select { min-height: 52px; font-size: 16px; border-radius: 12px; }
+#report input[type=text], #report textarea { font-size: 16px; border-radius: 12px; padding: 13px 15px; }
+#report textarea { min-height: 104px; line-height: 1.75; }
+#report input[type=text] { min-height: 52px; }
 #expense .segb button { min-height: 44px; font-size: 14px; border-radius: 10px; }
 #expense .card { border-radius: 14px; }
 /* 手段を選ぶまで、下の入力欄は出さない */
@@ -316,6 +319,9 @@
       <div class="hint" style="text-align:left;margin-top:6px">
         ＊より詳細な出張報告を作成するために、AIが質問します。
       </div>
+
+      <span class="fl">写真</span>
+      <div class="phwrap" id="r_photo" data-btn="写真を添付"></div>
     </div>
 
     <button type="button" class="submit" id="send">この内容で送る</button>
@@ -866,6 +872,7 @@
 
   function reportText() {
     var L = ['【出張報告】'];
+    (window.__rTail || function () { return []; })().forEach(function (s) { L.push(s); });
     // 「不要」のときは目印を付ける。受け取った側が質問を飛ばす
     if (rAi === 'off') L.push('※質問不要');
     var pur = esc($('r_purpose').value);
@@ -1114,6 +1121,14 @@
     } else if (cos.length === 1) {
       out.push('交通費の負担：' + cos[0]);
       out.push('宿泊費の負担：' + cos[0]);
+    }
+    return out;
+  };
+  window.__rTail = function () {
+    var out = [];
+    var w = $('r_photo');
+    if (w && w.querySelectorAll('.phs .t.done').length) {
+      out.push('証憑：' + w.querySelectorAll('.phs .t.done').length + '件　' + FOLDER);
     }
     return out;
   };
@@ -1410,6 +1425,7 @@
       $('x_kaigai').classList.toggle('hide', k.value !== '海外出張');
     };
     ensure($('x_mitsu'), '見積');
+    if ($('r_photo')) ensure($('r_photo'), '報告');
     askBox();
     decorate();
     var segs = $('e_segs'), stays = $('e_stays');

@@ -212,6 +212,9 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 
+/* 便名がまだのとき */
+#e_segs .s-name.need { border-color: #D98C00 !important; background: #FFFBF2 !important; }
+
 /* 移動手段はプルダウン。もとのボタンは裏で使うので隠すだけ */
 #e_segs .s-mean { display: none !important; }
 .meanwrap { position: relative; margin: 0 0 10px; }
@@ -1438,14 +1441,6 @@ body { background: #E9EDEB; }
   }
 
   var TICKET = ['飛行機', '新幹線'];
-  var ATT = {
-    '飛行機': '搭乗券・チケットを添付',
-    '新幹線': '搭乗券・チケットを添付',
-    'タクシー': '領収書を添付',
-    'バス': '領収書を添付',
-    '車': 'ETC明細・領収書を添付',
-    '在来線': '領収書を添付（あれば）'
-  };
 
   /* 手段をプルダウンに。中身はもとのボタンを押して伝える */
   function meanSelect(card) {
@@ -1491,13 +1486,7 @@ body { background: #E9EDEB; }
     var ticket = TICKET.indexOf(m) >= 0;
     var ph = card.querySelector('.phwrap');
     var fa = card.querySelector('.farewrap');
-    if (ph) {
-      ph.style.display = m ? '' : 'none';
-      var lb = ATT[m] || '写真を添付';
-      ph.setAttribute('data-btn', lb);
-      var btn = ph.querySelector('.phbtn');
-      if (btn) btn.textContent = '\uD83D\uDCCE\u3000' + lb;
-    }
+    if (ph) ph.style.display = (m && ticket) ? '' : 'none';
     if (fa) {
       fa.style.display = (m && !ticket) ? '' : 'none';
       fa.querySelector('.fl2').textContent = (m === '車') ? 'ETC代' : '金額';
@@ -1561,6 +1550,25 @@ body { background: #E9EDEB; }
     if (segs) new MutationObserver(decorate).observe(segs, { childList: true });
     if (stays) new MutationObserver(decorate).observe(stays, { childList: true });
     document.addEventListener('click', function () { setTimeout(paintClips, 40); });
+    /* 往復にしたあと、帰りの便名が空なら目立たせて、そこへ連れていく */
+    document.addEventListener('click', function (e) {
+      var el = e.target;
+      if (!el || !el.closest || !el.closest('.s-rt')) return;
+      setTimeout(function () {
+        var back = $('e_segs') && $('e_segs').children[1];
+        if (!back) return;
+        var on = back.querySelector('.s-mean .on');
+        var m = on ? on.getAttribute('data-v') : '';
+        if (['飛行機', '新幹線'].indexOf(m) < 0) return;
+        var nm = back.querySelector('.s-name');
+        if (!nm || (nm.value || '').trim()) return;
+        nm.classList.add('need');
+        nm.placeholder = (m === '新幹線') ? '帰りの列車名をご記入ください' : '帰りの便名をご記入ください';
+        nm.addEventListener('input', function () { nm.classList.remove('need'); });
+        try { nm.focus(); } catch (err) {}
+      }, 120);
+    });
+
     document.addEventListener('click', function (e) {
       var el = e.target;
       if (!el || !el.closest) return;
@@ -1580,6 +1588,21 @@ body { background: #E9EDEB; }
       e.stopPropagation();
       e.preventDefault();
       alert('出張区分を選んでください。');
+      return;
+    }
+    /* 便名が空のまま送ろうとしたら、一度だけ確かめる */
+    var miss = [];
+    var segs = $('e_segs');
+    if (segs) Array.prototype.forEach.call(segs.children, function (c, i) {
+      var on = c.querySelector('.s-mean .on');
+      var m = on ? on.getAttribute('data-v') : '';
+      if (['飛行機', '新幹線'].indexOf(m) < 0) return;
+      var nm = c.querySelector('.s-name');
+      if (nm && !(nm.value || '').trim()) { nm.classList.add('need'); miss.push('移動' + (i + 1)); }
+    });
+    if (miss.length) {
+      var ok = confirm(miss.join('・') + ' の便名が未入力です。\n\nこのまま送っても、あとでLINEからお伺いします。\n送信しますか？');
+      if (!ok) { e.stopPropagation(); e.preventDefault(); }
     }
   }, true);
 

@@ -227,6 +227,16 @@
   border-radius: 12px; padding: 0 38px 0 15px; font-size: 16px; font-weight: 400; color: #9AA6A0;
   font-family: inherit; appearance: none; -webkit-appearance: none; }
 .meanwrap select.pick { border-color: #0A7A45; color: #141A17; }
+/* 座席クラスもプルダウン。もとのボタンは裏で使うので隠すだけ */
+#e_segs .s-cls { display: none !important; }
+.clswrap { position: relative; margin: 0 0 10px; }
+.clswrap.hide { display: none !important; }
+.clswrap::after { content: '▾'; position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+  color: #6E7B74; font-size: 13px; pointer-events: none; }
+.clswrap select { width: 100%; min-height: 48px; border: 1.5px solid #E4E8E6; background: #fff;
+  border-radius: 12px; padding: 0 38px 0 14px; font-size: 16px; font-weight: 400; color: #9AA6A0;
+  font-family: inherit; appearance: none; -webkit-appearance: none; }
+.clswrap select.pick { border-color: #0A7A45; color: #141A17; }
 .farewrap { margin-top: 12px; }
 .farewrap .fl2 { font-size: 12px; color: #6E7B74; font-weight: 700; letter-spacing: .06em; margin: 0 0 8px; }
 .farewrap .yen2 { display: flex; align-items: center; gap: 9px; min-height: 52px; background: #fff;
@@ -403,7 +413,7 @@ body { background: #E9EDEB; }
   var MEANS = ['飛行機', '新幹線', '在来線', 'タクシー', '車', 'バス'];
   var PAY    = ['個人', '法人', '支払なし'];   // 既定は個人（日帰り出張くんと同じ呼び方）
   var CLS = {   // 日帰り出張くんと同じ選択肢
-    '飛行機': ['エコノミー', 'クラスJ', 'ビジネス', 'ファースト'],
+    '飛行機': ['エコノミー', 'クラスJ', 'プレミアムエコノミー', 'ビジネス', 'ファースト'],
     '新幹線': ['自由席', '指定席', 'グリーン', 'グランクラス']
   };
   var FROM_PH = { '飛行機': ['発（羽田）', '着（伊丹）'], '新幹線': ['発（東京）', '着（新大阪）'] };
@@ -1453,6 +1463,59 @@ body { background: #E9EDEB; }
     box.parentNode.insertBefore(wrap, box);
   }
 
+  /* 座席クラスをプルダウンに。中身はもとのボタンを押して伝える */
+  function clsSelect(card) {
+    if (card.querySelector('.clswrap')) return;
+    var box = card.querySelector('.s-cls');
+    if (!box) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'clswrap hide';
+    var sel = document.createElement('select');
+    sel.className = 's-clssel';
+    sel.onchange = function () {
+      var hit = null;
+      Array.prototype.forEach.call(box.children, function (b) {
+        if (b.getAttribute('data-v') === sel.value) hit = b;
+      });
+      if (hit) hit.click();
+      clsApply(card);
+    };
+    wrap.appendChild(sel);
+    box.parentNode.insertBefore(wrap, box);
+  }
+
+  /* 手段が変わるとクラスの顔ぶれも変わるので、そのたびに作り直す */
+  function clsApply(card) {
+    var box = card.querySelector('.s-cls');
+    var wrap = card.querySelector('.clswrap');
+    if (!box || !wrap) return;
+    var sel = wrap.querySelector('select');
+    var names = Array.prototype.map.call(box.children, function (b) {
+      return b.getAttribute('data-v');
+    }).join(',');
+    if (wrap.getAttribute('data-list') !== names) {
+      wrap.setAttribute('data-list', names);
+      sel.innerHTML = '';
+      sel.appendChild(new Option('クラスを選ぶ', ''));
+      Array.prototype.forEach.call(box.children, function (b) {
+        sel.appendChild(new Option(b.getAttribute('data-v'), b.getAttribute('data-v')));
+      });
+    }
+    var on = box.querySelector('.on');
+    var v = on ? on.getAttribute('data-v') : '';
+    if (sel.value !== v) sel.value = v;
+    sel.classList.toggle('pick', !!v);
+    wrap.classList.toggle('hide', box.classList.contains('hide') || !box.children.length);
+  }
+
+  /* 往復にした直後など、押したあとに全部のカードを合わせ直す */
+  function clsAll() {
+    var segs = $('e_segs');
+    if (segs) Array.prototype.forEach.call(segs.children, function (c) {
+      meanSelect(c); clsSelect(c); meanApply(c);
+    });
+  }
+
   /* 金額の欄。鉄道・タクシー・車・バスのときだけ出す */
   function fareBox(card) {
     if (card.querySelector('.farewrap')) return;
@@ -1471,6 +1534,7 @@ body { background: #E9EDEB; }
     var sel = card.querySelector('.s-meansel');
     if (sel && sel.value !== m) sel.value = m;
     if (sel) sel.classList.toggle('pick', !!m);
+    clsApply(card);
     var ticket = TICKET.indexOf(m) >= 0;
     var ph = card.querySelector('.phwrap');
     var fa = card.querySelector('.farewrap');
@@ -1493,6 +1557,7 @@ body { background: #E9EDEB; }
       }
       ensure(w, '移動' + (i + 1));
       meanSelect(c);
+      clsSelect(c);
       fareBox(c);
       meanApply(c);
     });
@@ -1537,7 +1602,7 @@ body { background: #E9EDEB; }
     var segs = $('e_segs'), stays = $('e_stays');
     if (segs) new MutationObserver(decorate).observe(segs, { childList: true });
     if (stays) new MutationObserver(decorate).observe(stays, { childList: true });
-    document.addEventListener('click', function () { setTimeout(paintClips, 40); });
+    document.addEventListener('click', function () { setTimeout(paintClips, 40); setTimeout(clsAll, 60); });
     /* 往復にしたあと、帰りの便名が空なら目立たせて、そこへ連れていく */
     document.addEventListener('click', function (e) {
       var el = e.target;

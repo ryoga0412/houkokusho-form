@@ -1438,6 +1438,14 @@ body { background: #E9EDEB; }
   }
 
   var TICKET = ['飛行機', '新幹線'];
+  var ATT = {
+    '飛行機': '搭乗券・チケットを添付',
+    '新幹線': '搭乗券・チケットを添付',
+    'タクシー': '領収書を添付',
+    'バス': '領収書を添付',
+    '車': 'ETC明細・領収書を添付',
+    '在来線': '領収書を添付（あれば）'
+  };
 
   /* 手段をプルダウンに。中身はもとのボタンを押して伝える */
   function meanSelect(card) {
@@ -1483,7 +1491,13 @@ body { background: #E9EDEB; }
     var ticket = TICKET.indexOf(m) >= 0;
     var ph = card.querySelector('.phwrap');
     var fa = card.querySelector('.farewrap');
-    if (ph) ph.style.display = (m && ticket) ? '' : 'none';
+    if (ph) {
+      ph.style.display = m ? '' : 'none';
+      var lb = ATT[m] || '写真を添付';
+      ph.setAttribute('data-btn', lb);
+      var btn = ph.querySelector('.phbtn');
+      if (btn) btn.textContent = '\uD83D\uDCCE\u3000' + lb;
+    }
     if (fa) {
       fa.style.display = (m && !ticket) ? '' : 'none';
       fa.querySelector('.fl2').textContent = (m === '車') ? 'ETC代' : '金額';

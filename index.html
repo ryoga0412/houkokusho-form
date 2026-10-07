@@ -132,7 +132,7 @@
 #expense .segb button { min-height: 44px; font-size: 14px; border-radius: 10px; }
 #expense .card { border-radius: 14px; }
 /* 手段を選ぶまで、下の入力欄は出さない */
-#e_segs .card.pending > *:not(.card-h):not(.s-mean):not(.meanwrap) { display: none !important; }
+#e_segs .card.pending > *:not(.card-h):not(.s-mean) { display: none !important; }
 .xbox { background: #fff; border: 1px solid #E4E8E6; border-radius: 14px; padding: 14px; margin: 0 0 14px; }
 .xlab { font-size: 12px; color: #6E7B74; font-weight: 700; letter-spacing: .06em; margin: 14px 0 8px; }
 .xlab:first-child { margin-top: 0; }
@@ -218,9 +218,9 @@
 .meanwrap::after { content: '▾'; position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
   color: #6E7B74; font-size: 13px; pointer-events: none; }
 .meanwrap select { width: 100%; min-height: 52px; border: 1.5px solid #E4E8E6; background: #fff;
-  border-radius: 12px; padding: 0 38px 0 15px; font-size: 16px; font-weight: 600; color: #141A17;
+  border-radius: 12px; padding: 0 38px 0 15px; font-size: 16px; font-weight: 400; color: #9AA6A0;
   font-family: inherit; appearance: none; -webkit-appearance: none; }
-.meanwrap select.pick { border-color: #0A7A45; }
+.meanwrap select.pick { border-color: #0A7A45; color: #141A17; }
 .farewrap { margin-top: 12px; }
 .farewrap .fl2 { font-size: 12px; color: #6E7B74; font-weight: 700; letter-spacing: .06em; margin: 0 0 8px; }
 .farewrap .yen2 { display: flex; align-items: center; gap: 9px; min-height: 52px; background: #fff;

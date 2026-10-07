@@ -235,20 +235,14 @@
 
 /* ===== 案B：まとまりを浮かぶカードに、上に進み具合 ===== */
 body { background: #E9EDEB; }
-#expense .bsec, #report .bsec, #x_burden {
+#expense .bsec, #report .bsec, #x_burden, #e_staybox {
   background: #fff; border-radius: 18px; padding: 16px 15px 14px; margin: 0 0 14px;
   box-shadow: 0 2px 10px rgba(20,26,23,.08); border-left: 4px solid #0A7A45; }
-#expense .bsec > .fl, #report .bsec > .fl, #x_burden > .fl {
+#expense .bsec > .fl, #report .bsec > .fl, #x_burden > .fl, #e_staybox > .fl {
   font-size: 16px; font-weight: 800; letter-spacing: .03em; color: #141A17;
   margin: 0 0 13px; display: flex; align-items: center; width: 100%; }
 #expense .bsec > .fl .xcv, #report .bsec > .fl .xcv { margin-left: auto; color: #9AA6A0; font-size: 12px; }
-#expense .bsec:nth-of-type(2) { border-left-color: #3EA17A; }
-#expense .bsec:nth-of-type(3) { border-left-color: #5FB894; }
-#expense .bsec:nth-of-type(4) { border-left-color: #86CBAE; }
-#expense .bsec:nth-of-type(5) { border-left-color: #A9DAC6; }
-#report .bsec:nth-of-type(2) { border-left-color: #3EA17A; }
-#report .bsec:nth-of-type(3) { border-left-color: #5FB894; }
-#report .bsec:nth-of-type(4) { border-left-color: #86CBAE; }
+#e_staybox .card { background: #FBFCFB; }
 /* 枠の中の枠は軽く */
 #expense .bsec .xbox { background: #FBFCFB; border-color: #EDF1EF; }
 #expense .bsec .card { background: #FBFCFB; }
@@ -1707,8 +1701,10 @@ body { background: #E9EDEB; }
     Array.prototype.forEach.call(ex.querySelectorAll('span.fl'), function (fl) {
       var nm = (fl.textContent || '').trim();
       if (SECT.indexOf(nm) < 0 || fl.__fold) return;
-      var box = fl.parentNode;
-      if (!box) return;
+      var box = fl.closest ? fl.closest('.bsec') : null;
+      if (!box && fl.parentNode &&
+          (fl.parentNode.id === 'x_burden' || fl.parentNode.id === 'e_staybox')) box = fl.parentNode;
+      if (!box) return;   /* まだカードにまとまっていない。あとでやり直す */
       fl.__fold = true;
       fl.classList.add('xhead');
       var cv = document.createElement('span');
@@ -1741,11 +1737,14 @@ body { background: #E9EDEB; }
     });
   }
 
+  window.__foldSetup = setup;
   function boot() {
     setup();
-    setTimeout(tidy, 400);
-    setTimeout(tidy, 1500);
-    setTimeout(tidy, 3000);
+    setTimeout(setup, 300);
+    setTimeout(setup, 900);
+    setTimeout(tidy, 1300);
+    setTimeout(tidy, 2500);
+    setTimeout(tidy, 4000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
@@ -1771,7 +1770,7 @@ body { background: #E9EDEB; }
         cur.appendChild(el);
         return;
       }
-      if (el.id === 'x_burden') { cur = null; return; }
+      if (el.id === 'x_burden' || el.id === 'e_staybox') { cur = null; return; }
       if (cur) cur.appendChild(el);
     });
   }
@@ -1828,9 +1827,24 @@ body { background: #E9EDEB; }
     p.querySelector('.n').textContent = n + ' / ' + s.length;
   }
 
+  /* 上から順に、帯の色を薄くしていく */
+  function tint() {
+    var PAL = ['#0A7A45', '#2E9A6E', '#4FB18B', '#74C6A6', '#9BDAC2', '#BCE7D5'];
+    ['expense', 'report'].forEach(function (id) {
+      var root = $(id);
+      if (!root) return;
+      var secs = root.querySelectorAll(':scope > .bsec, :scope > #x_burden, :scope > #e_staybox');
+      Array.prototype.forEach.call(secs, function (s, i) {
+        s.style.borderLeftColor = PAL[Math.min(i, PAL.length - 1)];
+      });
+    });
+  }
+
   function start() {
     wrap($('expense'));
     wrap($('report'));
+    tint();
+    if (window.__foldSetup) window.__foldSetup();
     var head = document.querySelector('header');
     if (head) {
       var p = document.createElement('div');

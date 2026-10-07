@@ -1189,7 +1189,7 @@ body { background: #E9EDEB; }
         if (!v) return;
         var on = c.querySelector('.s-mean .on');
         var m = on ? on.getAttribute('data-v') : '';
-        fares.push('・移動' + (i + 1) + ' ' + (m || '') + ' ' + (m === '車' ? 'ETC代 ' : '') + v + '円');
+        fares.push('・移動' + (i + 1) + ' ' + (m || '') + ' ' + (m === '車' ? 'ガソリン代・ETC代 ' : '') + v + '円');
       });
       if (fares.length) { out.push('交通費（実費）：'); fares.forEach(function (x) { out.push(x); }); }
     }
@@ -1550,7 +1550,7 @@ body { background: #E9EDEB; }
     }
     if (fa) {
       fa.style.display = (m && !ticket) ? '' : 'none';
-      fa.querySelector('.fl2').textContent = (m === '車') ? 'ETC代' : '金額';
+      fa.querySelector('.fl2').textContent = (m === '車') ? 'ガソリン代・ETC代' : '金額';
     }
   }
 

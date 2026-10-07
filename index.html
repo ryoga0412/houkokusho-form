@@ -123,6 +123,37 @@
   #cal_cancel{background:#EEF1EF;color:#56655C}
   #cal_ok{background:var(--brand);color:#fff}
   #cal_ok:disabled{background:#A9BFB4}
+
+/* ===== 旅費申請 2026-10 改訂 ===== */
+#expense input[type=text], #expense .dfield, #expense select { min-height: 52px; font-size: 16px; border-radius: 12px; }
+#expense .segb button { min-height: 44px; font-size: 14px; border-radius: 10px; }
+#expense .card { border-radius: 14px; }
+/* 手段を選ぶまで、下の入力欄は出さない */
+#e_segs .card.pending > *:not(.card-h):not(.s-mean) { display: none !important; }
+.xbox { background: #fff; border: 1px solid #E4E8E6; border-radius: 14px; padding: 14px; margin: 0 0 14px; }
+.xlab { font-size: 12px; color: #6E7B74; font-weight: 700; letter-spacing: .06em; margin: 14px 0 8px; }
+.xlab:first-child { margin-top: 0; }
+.xbox input[type=text], .xbox select { width: 100%; }
+.xchip { display: flex; align-items: center; gap: 8px; background: #E8F3ED; border-radius: 12px;
+  padding: 13px 15px; font-size: 15px; font-weight: 600; color: #066036; margin: 0 0 8px; }
+.xchip span { margin-left: auto; color: #0A7A45; font-size: 12.5px; font-weight: 700; }
+.xadd { display: flex; gap: 8px; margin: 0 0 10px; }
+.xadd input { flex: 1; }
+.xadd button { flex-shrink: 0; width: 66px; border: 0; border-radius: 12px; background: #0A7A45;
+  color: #fff; font-size: 14px; font-weight: 700; font-family: inherit; }
+.xrecl { font-size: 11.5px; color: #9AA6A0; font-weight: 700; letter-spacing: .06em; margin: 2px 0 7px; }
+.xrec { display: flex; gap: 7px; flex-wrap: wrap; margin: 0 0 4px; }
+.xrec button { border: 1.5px solid #E4E8E6; background: #fff; border-radius: 999px; padding: 8px 13px;
+  font-size: 13px; font-weight: 600; color: #6E7B74; font-family: inherit; }
+.xmini { font-size: 11.5px; color: #6E7B74; margin: 10px 0 0; line-height: 1.7; }
+.xquiet { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 4px 0; border: 0;
+  background: none; color: #9AA6A0; font-size: 12.5px; font-weight: 600; font-family: inherit;
+  text-decoration: underline; text-underline-offset: 3px; }
+.xover { display: none; margin-top: 10px; padding: 14px; border-radius: 12px; background: #F7F9F8; border: 1px solid #E4E8E6; }
+.xover.open { display: block; }
+.xol { font-size: 12.5px; font-weight: 700; color: #6E7B74; margin: 0 0 9px; }
+.xnote { font-size: 11.5px; color: #6E7B74; margin: 9px 0 0; line-height: 1.7; }
+
 </style>
 </head>
 <body>
@@ -138,19 +169,51 @@
 
     <!-- 旅費申請 -->
     <div id="expense" class="hide">
-      <span class="fl">出張期間 <em>／ 日帰りは同じ日をもう一度</em></span>
+
+      <!-- 出張する会社と人 -->
+      <span class="fl">出張する会社と人</span>
+      <div class="xbox">
+        <div class="xlab">報告者</div>
+        <input type="text" id="x_reporter" placeholder="お名前">
+
+        <div class="xlab">会社</div>
+        <div id="x_cos"></div>
+        <div class="xadd"><input type="text" id="x_co" placeholder="会社名を入力"><button type="button" id="x_coAdd">追加</button></div>
+        <div class="xrecl">前に使った会社</div>
+        <div class="xrec" id="x_coRec"></div>
+
+        <div class="xlab">出張者</div>
+        <div id="x_pes"></div>
+        <div class="xadd"><input type="text" id="x_pe" placeholder="出張者名を入力"><button type="button" id="x_peAdd">追加</button></div>
+        <div class="xrecl">前に使った出張者</div>
+        <div class="xrec" id="x_peRec"></div>
+        <p class="xmini">旅費精算書は、出張者ごとに1通ずつお作りします。</p>
+      </div>
+
+      <!-- 費用の負担（会社が2社以上のときだけ出す） -->
+      <div id="x_burden" class="hide">
+        <span class="fl">費用の負担</span>
+        <div class="xbox">
+          <div class="xlab">交通費</div>
+          <select id="x_bTrans"></select>
+          <div class="xlab">宿泊費</div>
+          <select id="x_bStay"></select>
+        </div>
+      </div>
+
+      <span class="fl">出張期間</span>
       <button type="button" class="dfield empty" id="e_period">日付を選ぶ</button>
 
       <span class="fl">出張先</span>
       <input type="text" id="e_place" placeholder="品川／ゴルフ場名／現場名">
 
-      <span class="fl">移動 <em>／ 行きと帰りをそれぞれ</em></span>
+      <span class="fl">移動</span>
       <div id="e_segs"></div>
       <button type="button" class="add" id="e_addseg">＋ 移動を追加</button>
 
       <!-- 宿泊：出張期間が泊まり（開始日と最終日が別の日）のときだけ出す -->
       <div id="e_staybox" class="hide">
-        <span class="fl">宿泊 <em>／ 泊まりの出張のときだけ</em></span>
+        <span class="fl">宿泊</span>
         <div id="e_stays"></div>
         <button type="button" class="add" id="e_addstay">＋ 宿泊を追加</button>
       </div>
@@ -164,7 +227,7 @@
         <div data-v="all">まとめて報告</div>
       </div>
 
-      <span class="fl">目的 <em>／ 空欄でも構いません</em></span>
+      <span class="fl">目的</span>
       <input type="text" id="r_purpose" placeholder="未入力の場合は下の内容から作成します">
 
       <span class="fl" id="r_bodylabel">日ごとの出張内容</span>
@@ -630,6 +693,7 @@
     if (!place) return { err: '出張先をご記入ください。' };
 
     var L = ['【旅費申請】'];
+    (window.__xHead || function () { return []; })().forEach(function (s) { L.push(s); });
     L.push('出張期間：' + (r.to === r.from ? jp(r.from) + '（日帰り）' : jp(r.from) + '〜' + jp(r.to)));
     L.push('出張先：' + place);
 
@@ -668,6 +732,7 @@
     });
     if (stays.length) { L.push('宿泊先：'); stays.forEach(function (s) { L.push('・' + s); }); }
     else L.push('宿泊先：なし' + (r.to === r.from ? '（日帰り）' : ''));
+    (window.__xTail || function () { return []; })().forEach(function (s) { L.push(s); });
 
     return { text: L.join('\n') };
   }
@@ -819,5 +884,196 @@
   }).catch(function (e) { show('起動に失敗しました。（' + e + '）'); });
 })();
 </script>
+
+<script>
+/* ===== 会社・出張者・段階表示・規定額の超過（2026-10 追加） ===== */
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'houkoku_people_v1';
+  var mem = (function () {
+    try {
+      var o = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+      o.co = o.co || []; o.pe = o.pe || []; o.me = o.me || '';
+      return o;
+    } catch (e) { return { co: [], pe: [], me: '' }; }
+  })();
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e) {} }
+
+  var cos = [], pes = [];
+
+  function paint(box, list, onX) {
+    box.innerHTML = '';
+    list.forEach(function (n, i) {
+      var d = document.createElement('div');
+      d.className = 'xchip';
+      d.appendChild(document.createTextNode(n));
+      var s = document.createElement('span');
+      s.textContent = '外す';
+      s.onclick = function () { onX(i); };
+      d.appendChild(s);
+      box.appendChild(d);
+    });
+  }
+  function rec(box, all, used, onAdd) {
+    box.innerHTML = '';
+    all.filter(function (n) { return used.indexOf(n) < 0; }).slice(0, 6).forEach(function (n) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = '＋ ' + n;
+      b.onclick = function () { onAdd(n); };
+      box.appendChild(b);
+    });
+    var lab = box.previousElementSibling;
+    if (lab && lab.className === 'xrecl') lab.style.display = box.children.length ? '' : 'none';
+  }
+  function fillSel(sel, idx) {
+    var cur = sel.value;
+    sel.innerHTML = '';
+    cos.forEach(function (n) { sel.appendChild(new Option(n, n)); });
+    if (cos.indexOf(cur) >= 0) sel.value = cur;
+    else sel.selectedIndex = Math.min(idx, cos.length - 1);
+  }
+  function draw() {
+    paint($('x_cos'), cos, function (i) { cos.splice(i, 1); draw(); });
+    paint($('x_pes'), pes, function (i) { pes.splice(i, 1); draw(); });
+    rec($('x_coRec'), mem.co, cos, function (n) { cos.push(n); draw(); });
+    rec($('x_peRec'), mem.pe, pes, function (n) { pes.push(n); draw(); });
+    var b = $('x_burden');
+    if (cos.length >= 2) {
+      b.classList.remove('hide');
+      fillSel($('x_bTrans'), 0);
+      fillSel($('x_bStay'), 0);
+    } else {
+      b.classList.add('hide');
+    }
+  }
+  function addFrom(inp, list, store) {
+    var v = (inp.value || '').trim();
+    if (!v) return;
+    if (list.indexOf(v) < 0) list.push(v);
+    if (store.indexOf(v) < 0) store.unshift(v);
+    inp.value = '';
+    save();
+    draw();
+  }
+
+  /* 移動：手段を選ぶまで、下の入力欄を出さない */
+  function markPending(card) {
+    var mean = card.querySelector('.s-mean');
+    if (!mean) return;
+    card.classList.toggle('pending', !mean.querySelector('.on'));
+  }
+  function scanSegs() {
+    var box = $('e_segs');
+    if (box) Array.prototype.forEach.call(box.children, markPending);
+  }
+
+  /* 宿泊：規定額を超過した場合 */
+  function decorateStay(card) {
+    if (card.querySelector('.x-ov')) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'xquiet';
+    b.textContent = '＋ 規定額を超過した場合';
+    var d = document.createElement('div');
+    d.className = 'xover x-ov';
+    d.innerHTML = '<div class="xol">かかった宿泊費（1泊あたり）</div>' +
+      '<input type="text" class="h-over" inputmode="numeric" placeholder="18,000">' +
+      '<p class="xnote">規定額との差は担当者が計算します。<br>領収書は、いつもどおり別途お渡しください。</p>';
+    b.onclick = function () { d.classList.toggle('open'); };
+    card.appendChild(b);
+    card.appendChild(d);
+  }
+  function scanStays() {
+    var box = $('e_stays');
+    if (box) Array.prototype.forEach.call(box.children, decorateStay);
+  }
+
+  function start() {
+    if (!$('x_cos')) return;
+    cos = mem.co.slice(0, 1);
+    pes = mem.me ? [mem.me] : [];
+    if (mem.me) $('x_reporter').value = mem.me;
+
+    $('x_coAdd').onclick = function () { addFrom($('x_co'), cos, mem.co); };
+    $('x_peAdd').onclick = function () { addFrom($('x_pe'), pes, mem.pe); };
+    [['x_co', 'x_coAdd'], ['x_pe', 'x_peAdd']].forEach(function (p) {
+      $(p[0]).addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); $(p[1]).click(); }
+      });
+    });
+    draw();
+
+    var segs = $('e_segs'), stays = $('e_stays');
+    if (segs) {
+      new MutationObserver(scanSegs).observe(segs, { childList: true });
+      segs.addEventListener('click', function () { setTimeout(scanSegs, 0); });
+    }
+    if (stays) new MutationObserver(scanStays).observe(stays, { childList: true });
+    scanSegs();
+    scanStays();
+
+    /* LINEのアカウント名を報告者の既定にする */
+    function grabName() {
+      try {
+        if (!window.liff || !liff.isInClient || !liff.isInClient()) return;
+        liff.getProfile().then(function (p) {
+          var n = (p && p.displayName || '').trim();
+          if (!n) return;
+          mem.me = n; save();
+          if (!$('x_reporter').value) $('x_reporter').value = n;
+          if (pes.indexOf(n) < 0) { pes.unshift(n); draw(); }
+        }).catch(function () {});
+      } catch (e) {}
+    }
+    grabName();
+    setTimeout(grabName, 1500);
+  }
+
+  /* 送信文に足すもの */
+  window.__xHead = function () {
+    var out = [];
+    var rep = (($('x_reporter') && $('x_reporter').value) || '').trim();
+    if (rep) out.push('報告者：' + rep);
+    if (cos.length) out.push('会社：' + cos.join('／'));
+    if (pes.length) out.push('出張者：' + pes.join('／'));
+    if (cos.length >= 2) {
+      out.push('交通費の負担：' + ($('x_bTrans').value || ''));
+      out.push('宿泊費の負担：' + ($('x_bStay').value || ''));
+    } else if (cos.length === 1) {
+      out.push('交通費の負担：' + cos[0]);
+      out.push('宿泊費の負担：' + cos[0]);
+    }
+    return out;
+  };
+  window.__xTail = function () {
+    var out = [];
+    var box = $('e_stays');
+    if (box) {
+      Array.prototype.forEach.call(box.children, function (w) {
+        var ov = w.querySelector('.h-over');
+        var nm = w.querySelector('.h-name');
+        var v = ov ? (ov.value || '').trim() : '';
+        if (v) out.push('規定額の超過：' + ((nm && nm.value) || '宿泊') + ' ￥' + v + '／泊');
+      });
+    }
+    /* 使った会社名・出張者名を、次回のために覚えておく */
+    cos.slice().reverse().forEach(function (n) {
+      mem.co = [n].concat(mem.co.filter(function (x) { return x !== n; }));
+    });
+    pes.slice().reverse().forEach(function (n) {
+      mem.pe = [n].concat(mem.pe.filter(function (x) { return x !== n; }));
+    });
+    mem.co = mem.co.slice(0, 12);
+    mem.pe = mem.pe.slice(0, 12);
+    save();
+    return out;
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>
+
 </body>
 </html>

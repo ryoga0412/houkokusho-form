@@ -205,7 +205,8 @@
 #expense .fl.xhead .xcv { margin-left: auto; color: #9AA6A0; font-size: 12px; font-weight: 700; }
 #expense .xbox.xfold { display: none; }
 .xsum2 { background: #fff; border: 1px solid #E4E8E6; border-radius: 14px; padding: 13px 14px;
-  margin: 0 0 14px; font-size: 13.5px; color: #6E7B74; line-height: 1.6; cursor: pointer; }
+  margin: 0 0 14px; font-size: 13.5px; color: #6E7B74; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 </style>
 </head>
@@ -1479,10 +1480,9 @@
       if (b && b.value) o.push('宿泊費 ' + b.value);
       return o.join('　・　');
     }
-    var p = $('e_period'), k = $('x_kubun'), pl = $('e_place');
+    var p = $('e_period'), pl = $('e_place');
     var out = [];
     if (p && !p.classList.contains('empty')) out.push(p.textContent.trim());
-    if (k && k.value) out.push(k.value);
     if (pl && pl.value.trim()) out.push(pl.value.trim());
     return out.join('　・　');
   }

@@ -660,7 +660,7 @@
       fetch(EXEC_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // この形なら事前確認なしで送れる
-        body: JSON.stringify({ type: 'rakuraku', id: draftId, accessToken: liff.getAccessToken(), text: draft })
+        body: JSON.stringify({ type: 'rakuraku', id: draftId, accessToken: liff.getAccessToken(), text: draft, ch: (new URLSearchParams(location.search).get('ch') || '') })
       })
         .then(function (r) { return r.json(); })
         .then(function (j) {

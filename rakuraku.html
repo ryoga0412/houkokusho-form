@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>日帰り出張くん</title>
+<title>日帰り出張一括報告</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
   :root{--brand:#0E6B4C;--brand-lt:#E4F1EA;--ink:#1B2320;--dim:#8A9790;
@@ -119,7 +119,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>日帰り出張くん</h1>
+    <h1>日帰り出張一括報告</h1>
   </header>
   <div class="msg hide" id="msg"></div>
 
@@ -215,7 +215,7 @@
 (function () {
   var LIFF_ID = '2011518319-ABM6yIOM';
   var HEADER  = '【旅費申請】';          // Code.gs が受け取る見出し（既存フォームと同じ）
-  var MARK    = '（日帰り出張くんから送信）';   // Code.gs の isRakurakuText() が見る目印
+  var MARK    = '（日帰り出張一括報告から送信）';   // Code.gs の isRakurakuText() が見る目印
   var PREVIEW = /[?&]preview=1/.test(location.search);  // PCでの見た目確認用（送信しない）
   // 受付先（Apps Script のウェブアプリ。LINEのWebhookと同じURL）
   var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxs0WXzhbnHdfmlzjYGmGBqtN4SPxKATK18uD8O4lhX9lL9FuJ3paP775mjoQwfwDJO/exec';

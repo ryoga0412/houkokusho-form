@@ -114,6 +114,14 @@
   #cal_cancel{background:#EEF1EF;color:#56655C}
   #cal_ok{background:var(--brand);color:#fff}
   #cal_ok:disabled{background:#A9BFB4}
+  /* 写真 */
+  .ph-list{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+  .ph-chip{display:inline-flex;align-items:center;gap:9px;background:#F1F5F2;border-radius:11px;padding:8px 11px;font-size:13px;color:#2C3B33}
+  .ph-chip img{width:36px;height:36px;object-fit:cover;border-radius:7px;display:block;background:#DDE5E0}
+  .ph-chip .st{color:#6B7B72;font-size:12px}
+  .ph-chip.ok .st{color:#0A7A45;font-weight:700}
+  .ph-chip.ng .st{color:#C0392B;font-weight:700}
+  .ph-chip .x{border:none;background:none;color:#8A9A90;font-size:17px;line-height:1;cursor:pointer;padding:0 1px;font-family:inherit}
 </style>
 </head>
 <body>
@@ -161,6 +169,11 @@
 
       <span class="fl">仕事内容</span>
       <textarea class="r-work" placeholder="〇〇社との打合せ、現場の立会い　など"></textarea>
+
+      <span class="fl">写真 <em>／ 領収書・チケットなど（なくても送れます）</em></span>
+      <div class="ph-list r-phlist"></div>
+      <button type="button" class="pill r-addph">📎　写真を追加</button>
+      <input type="file" class="r-file" accept="image/*" multiple hidden>
     </div>
   </div>
 </template>
@@ -537,11 +550,78 @@
 
     row.querySelector('.r-addleg').onclick = function () { addLeg(row); };
 
+    var file = row.querySelector('.r-file');
+    row.querySelector('.r-addph').onclick = function () { file.click(); };
+    file.onchange = function () {
+      each(file.files, function (f) { addPhoto(row, f); });
+      file.value = '';   // 同じ写真をもう一度選べるように
+    };
+
     row.querySelector('.r-del').onclick = function () { row.remove(); renumber(); };
     $('rows').appendChild(row);
     addLeg(row); addLeg(row);   // 行きと帰り
     renumber();
     return row;
+  }
+
+  /* ---------- 写真 ---------- */
+  var PHREQ = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   // この申請の写真置き場
+
+  /* 送る前に小さくする。領収書の文字が読めれば十分 */
+  function shrink(file, cb) {
+    var fr = new FileReader();
+    fr.onerror = function () { cb(null); };
+    fr.onload = function () {
+      var src = String(fr.result);
+      if (!/^image\//.test(file.type || '')) { cb(src.split(',')[1], file.type || 'application/octet-stream', ''); return; }
+      var img = new Image();
+      img.onerror = function () { cb(src.split(',')[1], file.type, src); };
+      img.onload = function () {
+        var max = 1600, s = Math.min(1, max / Math.max(img.width, img.height));
+        var cv = document.createElement('canvas');
+        cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        try {
+          var out = cv.toDataURL('image/jpeg', 0.82);
+          cb(out.split(',')[1], 'image/jpeg', out);
+        } catch (e) { cb(src.split(',')[1], file.type, src); }
+      };
+      img.src = src;
+    };
+    fr.readAsDataURL(file);
+  }
+
+  /* 1枚ぶん。選んだ時点で送ってしまう */
+  function addPhoto(row, file) {
+    var chip = document.createElement('div');
+    chip.className = 'ph-chip';
+    chip.innerHTML = '<img alt=""><span class="st">読み込み中…</span>';
+    row.querySelector('.r-phlist').appendChild(chip);
+    var thumb = chip.querySelector('img'), st = chip.querySelector('.st');
+
+    shrink(file, function (b64, mime, preview) {
+      if (!b64) { chip.className = 'ph-chip ng'; st.textContent = '読み込めません'; return; }
+      if (preview) thumb.src = preview;
+      st.textContent = '送信中…';
+      fetch(EXEC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ type: 'upload', reqId: PHREQ, accessToken: liff.getAccessToken(),
+                               label: '日帰り', name: file.name || 'photo.jpg', mime: mime, data: b64 })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+          if (!j.ok || !j.url) { chip.className = 'ph-chip ng'; st.textContent = '送れません'; return; }
+          chip.className = 'ph-chip ok';
+          chip.setAttribute('data-url', j.url);
+          st.textContent = '添付しました';
+          var x = document.createElement('button');
+          x.type = 'button'; x.className = 'x'; x.textContent = '×';
+          x.onclick = function () { chip.remove(); };
+          chip.appendChild(x);
+        })
+        .catch(function () { chip.className = 'ph-chip ng'; st.textContent = '送れません'; });
+    });
   }
 
   /* ---------- 送る文章をつくる ---------- */
@@ -599,7 +679,15 @@
         legs.forEach(function (x) { L.push('・' + x.s); });   // 入力した順（行き→帰り）のまま
       }
       L.push('仕事内容：' + val(work.value));
+
+      var shots = [];
+      each(row.querySelectorAll('.ph-chip.ok'), function (c) { shots.push(c.getAttribute('data-url')); });
+      if (shots.length) { L.push('添付画像：'); shots.forEach(function (u) { L.push('・' + u); }); }
     });
+
+    if (document.querySelector('.ph-chip:not(.ok):not(.ng)')) {
+      return { err: '写真を送っています。少し待ってからもう一度押してください。' };
+    }
 
     if (first) {
       first.el.scrollIntoView({ block: 'center', behavior: 'smooth' });

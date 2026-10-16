@@ -991,7 +991,7 @@ body { background: #E9EDEB; }
         method: 'POST',
         keepalive: true,   // 画面を閉じたあとも送信は続く
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ type: 'ai_form', id: id, accessToken: liff.getAccessToken(), text: r.text })
+        body: JSON.stringify({ type: 'ai_form', id: id, accessToken: liff.getAccessToken(), text: r.text, ch: (new URLSearchParams(location.search).get('ch') || '') })
       })
         .then(function (res) { return res.json(); })
         .then(function (j) {

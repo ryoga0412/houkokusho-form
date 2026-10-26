@@ -745,6 +745,7 @@
       if (PREVIEW) { console.log(draft); show('プレビューのため送信していません。'); return; }
       $('send').disabled = true;
       $('send').textContent = '送信中…';
+      var accepted = false;   // 受付先が「受け取った」と答えたら立てる
       fetch(EXEC_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // この形なら事前確認なしで送れる
@@ -752,11 +753,19 @@
       })
         .then(function (r) { return r.json(); })
         .then(function (j) {
-          if (j.ok) { liff.closeWindow(); return; }
+          if (j.ok) {
+            accepted = true;
+            try { liff.closeWindow(); } catch (e) { show('送信しました。この画面を閉じてください。'); }
+            return;
+          }
           if (j.fallback) { viaTalk(); return; }   // 送信数の上限などで届けられなかったとき
           failed(j.error || 'error');
         })
-        .catch(function () { viaTalk(); });   // 受付先につながらないとき
+        .catch(function () {
+          // 受け取ってもらえたあとに画面を閉じられなかっただけのときは、トークに送り直さない
+          // （送り直すと、台帳に同じ出張が2行立ってしまう）
+          if (!accepted) viaTalk();
+        });
     };
     $('form').classList.remove('hide');
   }

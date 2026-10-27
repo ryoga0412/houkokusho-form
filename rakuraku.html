@@ -114,6 +114,13 @@
   #cal_cancel{background:#EEF1EF;color:#56655C}
   #cal_ok{background:var(--brand);color:#fff}
   #cal_ok:disabled{background:#A9BFB4}
+  /* 支払は小さなボタンで横に並べる */
+  .seg.pay{display:inline-flex;gap:6px;border:none;background:none;border-radius:0;overflow:visible;width:auto}
+  .seg.pay button{flex:none;border:1px solid var(--line);background:var(--white);color:#56655C;
+                  border-radius:15px;padding:5px 15px;font-size:13px;line-height:1.5}
+  .seg.pay button+button{border-left:1px solid var(--line)}
+  .seg.pay button.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+
   /* 横に2つ並べる */
   .duo{display:flex;gap:9px}
   .duo>div{flex:1;min-width:0}
@@ -164,33 +171,33 @@
   <div class="row">
     <div class="row-h"><b class="r-no"></b><button type="button" class="r-del">この出張を削除</button></div>
     <div class="row-b">
-      <span class="fl">会社名 <em>／ 2社分まとめて出せます</em></span>
+      <span class="fl">会社名</span>
       <div class="r-cos"></div>
       <button type="button" class="pill r-addco">＋ 会社を追加</button>
 
-      <span class="fl">出張者 <em>／ 複数人まとめて出せます</em></span>
+      <span class="fl">出張者</span>
       <div class="r-whos"></div>
       <button type="button" class="pill r-addwho">＋ 出張者を追加</button>
 
       <span class="fl">出張先</span>
       <input type="text" class="r-place" placeholder="品川／ゴルフ場名／現場名">
 
-      <span class="fl">出張日 <em>／ 同じ内容なら複数の日を選べます</em></span>
+      <span class="fl">出張日</span>
       <button type="button" class="dfield empty r-dates"></button>
 
       <div class="r-billbox hide">
-        <span class="fl">交通費の請求先 <em>／ どちらの会社につけますか</em></span>
+        <span class="fl">交通費の請求先</span>
         <select class="r-bill empty"></select>
       </div>
 
-      <span class="fl">移動手段 <em>／ 行きと帰りで別々に選べます</em></span>
+      <span class="fl">移動手段</span>
       <div class="r-legs"></div>
       <button type="button" class="pill r-addleg">＋ 移動を追加</button>
 
       <span class="fl">仕事内容</span>
       <textarea class="r-work" placeholder="〇〇社との打合せ、現場の立会い　など"></textarea>
 
-      <span class="fl">写真 <em>／ 領収書・チケットなど（なくても送れます）</em></span>
+      <span class="fl">写真</span>
       <div class="ph-list r-phlist"></div>
       <button type="button" class="pill r-addph">📎　写真を追加</button>
       <input type="file" class="r-file" accept="image/*" multiple hidden>
@@ -247,7 +254,7 @@
       </div>
     </div>
     <div class="l-route hide">
-      <span class="fl">発着 <em class="l-opt">／ 分かれば</em></span>
+      <span class="fl">発着</span>
       <div class="two">
         <input type="text" class="l-from" placeholder="発（羽田）">
         <span>→</span>
@@ -557,7 +564,6 @@
     if (m && !payBox.getAttribute('data-touched')) setSeg(payBox, CLS[m] ? '個人' : '法人');
     routeVis(w);
     w.querySelector('.l-pay').classList.toggle('hide', !m);        // 支払もどの手段でも
-    w.querySelector('.l-opt').classList.toggle('hide', !!list);    // 飛行機・新幹線のときだけ必須
     if (w.parentNode) renumberSubs(w.parentNode, '移動');
     if (m) {
       var ph = FROM_PH[m] || ['発', '着'];

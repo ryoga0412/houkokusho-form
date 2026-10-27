@@ -114,6 +114,12 @@
   #cal_cancel{background:#EEF1EF;color:#56655C}
   #cal_ok{background:var(--brand);color:#fff}
   #cal_ok:disabled{background:#A9BFB4}
+  /* 会社名・出張者（複数行） */
+  .who{display:flex;gap:7px;align-items:center;margin-bottom:7px}
+  .who input{flex:1;min-width:0}
+  .who .w-del{flex:none;border:none;background:none;color:var(--warn);font-size:18px;line-height:1;
+              font-family:inherit;cursor:pointer;padding:4px 6px}
+
   /* 写真 */
   .ph-list{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
   .ph-chip{display:inline-flex;align-items:center;gap:9px;background:#F1F5F2;border-radius:11px;padding:8px 11px;font-size:13px;color:#2C3B33}
@@ -154,14 +160,24 @@
   <div class="row">
     <div class="row-h"><b class="r-no"></b><button type="button" class="r-del">この出張を削除</button></div>
     <div class="row-b">
-      <span class="fl">出張者</span>
-      <input type="text" class="r-who" placeholder="氏名">
+      <span class="fl">会社名 <em>／ 2社分まとめて出せます</em></span>
+      <div class="r-cos"></div>
+      <button type="button" class="pill r-addco">＋ 会社を追加</button>
+
+      <span class="fl">出張者 <em>／ 複数人まとめて出せます</em></span>
+      <div class="r-whos"></div>
+      <button type="button" class="pill r-addwho">＋ 出張者を追加</button>
 
       <span class="fl">出張先</span>
       <input type="text" class="r-place" placeholder="品川／ゴルフ場名／現場名">
 
       <span class="fl">出張日 <em>／ 同じ内容なら複数の日を選べます</em></span>
       <button type="button" class="dfield empty r-dates"></button>
+
+      <div class="r-billbox hide">
+        <span class="fl">交通費の請求先 <em>／ どちらの会社につけますか</em></span>
+        <select class="r-bill empty"></select>
+      </div>
 
       <span class="fl">移動手段 <em>／ 行きと帰りで別々に選べます</em></span>
       <div class="r-legs"></div>
@@ -178,30 +194,56 @@
   </div>
 </template>
 
+<!-- 会社1社ぶん -->
+<template id="tpl_co">
+  <div class="who">
+    <input type="text" class="r-co" placeholder="会社名">
+    <button type="button" class="w-del">×</button>
+  </div>
+</template>
+
+<!-- 出張者1人ぶん -->
+<template id="tpl_who">
+  <div class="who">
+    <input type="text" class="r-who" placeholder="氏名">
+    <button type="button" class="w-del">×</button>
+  </div>
+</template>
+
 <!-- 移動1区間。手段は区間ごとに選ぶ。飛行機・新幹線のときだけ明細を出す -->
 <template id="tpl_leg">
   <div class="sub">
     <div class="sub-h"><b class="l-no"></b><button type="button" class="l-del">削除</button></div>
     <span class="fl">手段</span>
-    <div class="seg pick l-mean"><button type="button" data-v="飛行機">飛行機</button><button type="button" data-v="新幹線">新幹線</button><button type="button" data-v="在来線">在来線</button><button type="button" data-v="車">車</button></div>
-    <div class="l-more hide">
-    <span class="fl">利用日</span>
-    <button type="button" class="dfield empty l-date"></button>
-    <span class="fl">便名</span>
-    <input type="text" class="l-name">
-    <span class="fl">座席クラス</span>
-    <div class="seg pick l-cls"></div>
-    <span class="fl">発着</span>
-    <div class="two">
-      <input type="text" class="l-from" placeholder="発（羽田）">
-      <span>→</span>
-      <input type="text" class="l-to" placeholder="着（伊丹）">
+    <select class="l-mean empty">
+      <option value="">選んでください</option>
+      <option value="飛行機">飛行機</option>
+      <option value="新幹線">新幹線</option>
+      <option value="在来線">在来線</option>
+      <option value="車">車</option>
+    </select>
+    <div class="l-air hide">
+      <span class="fl">利用日</span>
+      <button type="button" class="dfield empty l-date"></button>
+      <span class="fl">便名</span>
+      <input type="text" class="l-name">
+      <span class="fl">座席クラス</span>
+      <select class="l-cls empty"></select>
     </div>
-    <div class="l-chips hide"><span class="chips-l">最近使った場所（タップで入力）</span><div class="chips"></div></div>
-    <span class="fl">支払</span>
-    <div class="seg pay"><button type="button" class="on" data-v="個人">個人</button><button type="button" data-v="法人">法人</button><button type="button" data-v="支払なし">支払なし</button></div>
+    <div class="l-route hide">
+      <span class="fl">発着 <em class="l-opt">／ 分かれば</em></span>
+      <div class="two">
+        <input type="text" class="l-from" placeholder="発（羽田）">
+        <span>→</span>
+        <input type="text" class="l-to" placeholder="着（伊丹）">
+      </div>
+      <div class="l-chips hide"><span class="chips-l">最近使った場所（タップで入力）</span><div class="chips"></div></div>
+    </div>
+    <div class="l-pay hide">
+      <span class="fl">支払</span>
+      <div class="seg pay"><button type="button" class="on" data-v="個人">個人</button><button type="button" data-v="法人">法人</button><button type="button" data-v="支払なし">支払なし</button></div>
+    </div>
     <button type="button" class="rt l-rt hide">⇄ 往復にする（帰りを自動入力）</button>
-    </div>
   </div>
 </template>
 
@@ -238,7 +280,8 @@
     '新幹線': ['自由席', '指定席', 'グリーン', 'グランクラス']
   };
   var NAME_PH = { '飛行機': '例：JAL〇〇便', '新幹線': '例：のぞみ〇〇号' };
-  var FROM_PH = { '飛行機': ['発（羽田）', '着（伊丹）'], '新幹線': ['発（東京）', '着（新大阪）'] };
+  var FROM_PH = { '飛行機': ['発（羽田）', '着（伊丹）'], '新幹線': ['発（東京）', '着（新大阪）'],
+                  '在来線': ['発（品川）', '着（新宿）'], '車': ['発（自宅）', '着（現場）'] };
 
   var $ = function (id) { return document.getElementById(id); };
   var val = function (s) { return String(s == null ? '' : s).trim(); };
@@ -259,7 +302,7 @@
     each($('rows').children, function (row) {
       each(row.querySelector('.r-legs').children, function (w, i) {
         var m = segVal(w.querySelector('.l-mean'));
-        if (!CLS[m]) return;
+        if (!m) return;
         var fr = val(w.querySelector('.l-from').value), to = val(w.querySelector('.l-to').value);
         var list = mem.places[m] || [];
         [to, fr].forEach(function (x) {
@@ -291,7 +334,7 @@
       else t = y + '年' + m + '月' + d + '日';
       prev = { y: y, m: m };
       return t;
-    }).join('/');
+    }).join('・');
   }
 
   /* ---------- カレンダー ----------
@@ -393,12 +436,22 @@
       w.querySelector('.sub-h b').textContent = word + circled(i);
       w.querySelector('.sub-h button').classList.toggle('hide', n === 1);
       var rt = w.querySelector('.l-rt');
-      if (rt) rt.classList.toggle('hide', i !== 0);   // 往復ボタンは移動①にだけ
+      if (rt) rt.classList.toggle('hide', i !== 0 || !segVal(w.querySelector('.l-mean')));   // 往復ボタンは移動①にだけ
     });
   }
 
   /* 支払の区分：押したボタンだけを選ぶ。最初は「個人」 */
   function bindSeg(box, onPick) {
+    // プルダウンのときは、選び方が違うだけで使い方は同じ
+    if (box.tagName === 'SELECT') {
+      box.onchange = function () {
+        box.classList.toggle('empty', !box.value);
+        box.classList.remove('bad', 'auto');
+        $('err').textContent = '';
+        if (onPick) onPick(box.value);
+      };
+      return;
+    }
     each(box.children, function (b) {
       b.onclick = function () {
         each(box.children, function (x) { x.classList.remove('on'); });
@@ -410,10 +463,17 @@
     });
   }
   function setSeg(box, v) {
+    if (box.tagName === 'SELECT') {
+      box.value = v || '';
+      box.classList.toggle('empty', !box.value);
+      box.classList.remove('bad');
+      return;
+    }
     each(box.children, function (x) { x.classList.toggle('on', x.getAttribute('data-v') === v); });
     box.classList.remove('bad');
   }
   function segVal(box) {
+    if (box.tagName === 'SELECT') return box.value;
     var on = box.querySelector('.on');
     return on ? on.getAttribute('data-v') : '';
   }
@@ -450,23 +510,32 @@
   /* 区間の手段に合わせて、明細の出し分け・便名の例・座席クラスの選択肢を入れ替える */
   function refreshLeg(w) {
     var m = segVal(w.querySelector('.l-mean')), list = CLS[m];
-    w.querySelector('.l-more').classList.toggle('hide', !list);   // 飛行機・新幹線のときだけ
+    w.querySelector('.l-air').classList.toggle('hide', !list);     // 利用日・便名・座席は飛行機と新幹線だけ
+    w.querySelector('.l-route').classList.toggle('hide', !m);      // 発着はどの手段でも
+    w.querySelector('.l-pay').classList.toggle('hide', !m);        // 支払もどの手段でも
+    w.querySelector('.l-opt').classList.toggle('hide', !!list);    // 飛行機・新幹線のときだけ必須
+    if (w.parentNode) renumberSubs(w.parentNode, '移動');
+    if (m) {
+      var ph = FROM_PH[m] || ['発', '着'];
+      w.querySelector('.l-from').placeholder = ph[0];
+      w.querySelector('.l-to').placeholder = ph[1];
+      drawChips(w, m);
+    }
     if (!list) return;
     var cls = w.querySelector('.l-cls'), cur = segVal(cls);
     cls.innerHTML = '';
+    var head = document.createElement('option');
+    head.value = ''; head.textContent = '選んでください';
+    cls.appendChild(head);
     list.forEach(function (t) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = t.replace('（JAL）', '');
-      b.setAttribute('data-v', t.replace('（JAL）', ''));
-      cls.appendChild(b);
+      var v = t.replace('（JAL）', '');
+      var o = document.createElement('option');
+      o.value = v; o.textContent = v;
+      cls.appendChild(o);
     });
     bindSeg(cls);
     setSeg(cls, cur);   // 同じ名前のクラスがあれば選んだまま
     w.querySelector('.l-name').placeholder = NAME_PH[m];
-    w.querySelector('.l-from').placeholder = FROM_PH[m][0];
-    w.querySelector('.l-to').placeholder = FROM_PH[m][1];
-    drawChips(w, m);
   }
 
   /* 最近使った場所のボタン。発が空なら発へ、発が入っていれば着へ入れる */
@@ -539,12 +608,69 @@
     });
   }
 
+  /* 会社名・出張者の欄。1つだけのときは×を出さない */
+  function addLine(row, which, value) {
+    var box = row.querySelector(which === 'co' ? '.r-cos' : '.r-whos');
+    var el = $(which === 'co' ? 'tpl_co' : 'tpl_who').content.firstElementChild.cloneNode(true);
+    var input = el.querySelector('input');
+    input.value = value || '';
+    el.querySelector('.w-del').onclick = function () {
+      el.remove();
+      trimDel(box);
+      if (which === 'co') refreshBill(row);
+    };
+    box.appendChild(el);
+    trimDel(box);
+    return input;
+  }
+  function trimDel(box) {
+    each(box.children, function (el) {
+      el.querySelector('.w-del').classList.toggle('hide', box.children.length === 1);
+    });
+  }
+
+  /* 会社が2社以上のときだけ「交通費の請求先」を出す。交通費は1社にしか付けられないため */
+  function coNames(row) {
+    var out = [];
+    each(row.querySelectorAll('.r-co'), function (el) { if (val(el.value)) out.push(val(el.value)); });
+    return out;
+  }
+  function refreshBill(row) {
+    var cos = coNames(row), sel = row.querySelector('.r-bill'), cur = sel.value;
+    row.querySelector('.r-billbox').classList.toggle('hide', cos.length < 2);
+    sel.innerHTML = '';
+    var head = document.createElement('option');
+    head.value = ''; head.textContent = '選んでください';
+    sel.appendChild(head);
+    cos.forEach(function (c) {
+      var o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+    sel.value = (cos.indexOf(cur) >= 0) ? cur : '';
+    sel.classList.toggle('empty', !sel.value);
+  }
+
   function addRow() {
     var row = $('tpl_row').content.firstElementChild.cloneNode(true);
+    $('rows').appendChild(row);
 
-    // 出張者：1件目はLINEの表示名、2件目以降は1件目と同じ名前を入れておく
+    // 会社名・出張者：2件目以降は1件目と同じ顔ぶれを入れておく
     var firstRow = $('rows').children[0];
-    row.querySelector('.r-who').value = firstRow ? firstRow.querySelector('.r-who').value : myName;
+    if (firstRow && firstRow !== row) {
+      each(firstRow.querySelectorAll('.r-co'), function (el) { addLine(row, 'co', el.value); });
+      each(firstRow.querySelectorAll('.r-who'), function (el) { addLine(row, 'who', el.value); });
+    } else {
+      addLine(row, 'co', '');
+      addLine(row, 'who', myName);
+    }
+    row.querySelector('.r-addco').onclick = function () { addLine(row, 'co', '').focus(); refreshBill(row); };
+    row.querySelector('.r-addwho').onclick = function () { addLine(row, 'who', '').focus(); };
+    row.querySelector('.r-bill').onchange = function (e) {
+      e.target.classList.toggle('empty', !e.target.value);
+      e.target.classList.remove('bad');
+    };
+    refreshBill(row);
 
     bindField(row.querySelector('.r-dates'), 'multi', '日付を選ぶ');
 
@@ -558,8 +684,7 @@
     };
 
     row.querySelector('.r-del').onclick = function () { row.remove(); renumber(); };
-    $('rows').appendChild(row);
-    addLeg(row); addLeg(row);   // 行きと帰り
+    addLeg(row);   // まずは1つだけ。帰りは「⇄ 往復にする」か「＋ 移動を追加」で足す
     renumber();
     return row;
   }
@@ -633,8 +758,13 @@
     each(rows, function (row, i) {
       var no = row.querySelector('.r-no').textContent;
 
-      var who = row.querySelector('.r-who');
-      if (!val(who.value)) bad(who, no + 'の出張者をご記入ください。');
+      var cos = [];
+      each(row.querySelectorAll('.r-co'), function (el) { if (val(el.value)) cos.push(val(el.value)); });
+      if (!cos.length) bad(row.querySelector('.r-co'), no + 'の会社名をご記入ください。');
+
+      var whos = [];
+      each(row.querySelectorAll('.r-who'), function (el) { if (val(el.value)) whos.push(val(el.value)); });
+      if (!whos.length) bad(row.querySelector('.r-who'), no + 'の出張者をご記入ください。');
 
       var place = row.querySelector('.r-place');
       if (!val(place.value)) bad(place, no + 'の出張先をご記入ください。');
@@ -642,12 +772,22 @@
       var df = row.querySelector('.r-dates'), dates = getDates(df);
       if (!dates.length) bad(df, no + 'の出張日を選んでください。');
 
+      // 2社以上なら、交通費をどちらに付けるかは必ず決めてもらう
+      var bill = row.querySelector('.r-bill').value;
+      if (cos.length > 1 && !bill) bad(row.querySelector('.r-bill'), no + 'の交通費の請求先を選んでください。');
+
       var legs = [];
       each(row.querySelector('.r-legs').children, function (w) {
         var sub = no + 'の' + w.querySelector('.sub-h b').textContent;
         var mean = w.querySelector('.l-mean'), m = segVal(mean);
         if (!m) { bad(mean, sub + 'の手段を選んでください。'); return; }
-        if (!CLS[m]) { legs.push({ k: '', m: m, s: m }); return; }   // 在来線・車は手段だけ
+        if (!CLS[m]) {
+          var p0 = segVal(w.querySelector('.pay'));
+          var f0 = val(w.querySelector('.l-from').value), t0 = val(w.querySelector('.l-to').value);
+          var route = (f0 || t0) ? ' ' + f0 + '→' + t0 : '';   // 発着は任意。書いてあれば載せる
+          legs.push({ k: '', m: m, pay: p0, route: route, s: m + route + '　／ ' + p0 });
+          return;
+        }   // 在来線・車は手段だけ
         var d = w.querySelector('.l-date'), nm = w.querySelector('.l-name'), cls = w.querySelector('.l-cls');
         var fr = w.querySelector('.l-from'), to = w.querySelector('.l-to');
         var day = getDates(d)[0] || '';
@@ -656,7 +796,8 @@
         if (!segVal(cls)) bad(cls, sub + 'の座席クラスを選んでください。');
         if (!val(fr.value)) bad(fr, sub + 'の出発地をご記入ください。');
         if (!val(to.value)) bad(to, sub + 'の到着地をご記入ください。');
-        legs.push({ k: day, m: m, detail: true, s: (day ? jp(day) + wd(day) : '') + ' ' + m + ' ' +
+        legs.push({ k: day, m: m, detail: true, pay: segVal(w.querySelector('.pay')),
+                    s: (day ? jp(day) + wd(day) : '') + ' ' + m + ' ' +
                     val(fr.value) + '→' + val(to.value) + ' ' + val(nm.value) + '（' + segVal(cls) + '）' +
                     ' ／ ' + segVal(w.querySelector('.pay')) });
       });
@@ -666,14 +807,22 @@
       if (!val(work.value)) bad(work, no + 'の仕事内容をご記入ください。');
 
       if (rows.length > 1) L.push((i ? '\n' : '') + '■' + no);
-      L.push('出張者：' + val(who.value));
+      if (cos.length === 1) L.push('会社名：' + cos[0]);
+      else { L.push('会社名：'); cos.forEach(function (c) { L.push('・' + c); }); }
+      if (whos.length === 1) L.push('出張者：' + whos[0]);
+      else { L.push('出張者：'); whos.forEach(function (w) { L.push('・' + w); }); }
       L.push('出張先：' + val(place.value));
       if (dates.length === 1) L.push('出張日：' + jp(dates[0]) + wd(dates[0]));
       else { L.push('出張日：'); dates.forEach(function (d) { L.push('・' + jp(d) + wd(d)); }); }
       // 在来線・車だけなら「移動手段：在来線」と1行に。飛行機・新幹線があれば区間ごとに1行
+      if (cos.length > 1 && bill) L.push('交通費の請求先：' + bill);
+      // 飛行機・新幹線がなく、支払も発着も揃っていれば1行で。そうでなければ区間ごとに1行
       var hasDetail = legs.some(function (x) { return x.detail; });
-      if (!hasDetail) {
-        L.push('移動手段：' + legs.map(function (x) { return x.m; }).filter(function (v, j, a) { return a.indexOf(v) === j; }).join('・'));
+      var samePay = legs.length > 0 && legs.every(function (x) { return x.pay === legs[0].pay; });
+      var noRoute = legs.every(function (x) { return !x.route; });
+      if (!hasDetail && samePay && noRoute) {
+        L.push('移動手段：' + legs.map(function (x) { return x.m; }).filter(function (v, j, a) { return a.indexOf(v) === j; }).join('・')
+               + '　／ ' + legs[0].pay);
       } else {
         L.push('移動手段：');
         legs.forEach(function (x) { L.push('・' + x.s); });   // 入力した順（行き→帰り）のまま
@@ -704,7 +853,15 @@
     setupCal();
     addRow();
     // 直し始めたら、エラー表示と赤枠を消す
-    document.addEventListener('input', function (e) { $('err').textContent = ''; if (e.target.classList) e.target.classList.remove('bad', 'auto'); });
+    document.addEventListener('input', function (e) {
+      $('err').textContent = '';
+      if (e.target.classList) e.target.classList.remove('bad', 'auto');
+      // 会社名を書き換えたら、交通費の請求先の選択肢も入れ替える
+      if (e.target.classList && e.target.classList.contains('r-co')) {
+        var r = e.target.closest('.row');
+        if (r) refreshBill(r);
+      }
+    });
     document.addEventListener('change', function (e) { $('err').textContent = ''; if (e.target.classList) e.target.classList.remove('bad'); });
     $('addrow').onclick = function () {
       var r = addRow();

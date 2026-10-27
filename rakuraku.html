@@ -902,26 +902,30 @@
       if (PREVIEW) { console.log(draft); show('プレビューのため送信していません。'); return; }
       $('send').disabled = true;
       $('send').textContent = '送信中…';
-      var accepted = false;   // 受付先が「受け取った」と答えたら立てる
+      var closed = false, answered = false;
+      function bye() { closed = true; try { liff.closeWindow(); } catch (e) { show('送信しました。この画面を閉じてください。'); } }
+      // 受付が終わるのを待たずに閉じる。送信は keepalive で、画面を閉じたあとも続く
+      var timer = setTimeout(bye, 1200);
       fetch(EXEC_URL, {
         method: 'POST',
+        keepalive: true,
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // この形なら事前確認なしで送れる
         body: JSON.stringify({ type: 'rakuraku', id: draftId, accessToken: liff.getAccessToken(), text: draft, ch: (new URLSearchParams(location.search).get('ch') || '') })
       })
         .then(function (r) { return r.json(); })
         .then(function (j) {
-          if (j.ok) {
-            accepted = true;
-            try { liff.closeWindow(); } catch (e) { show('送信しました。この画面を閉じてください。'); }
-            return;
-          }
+          clearTimeout(timer);
+          answered = true;
+          if (j.ok) { bye(); return; }
+          if (closed) return;                      // もう閉じたあとなら、何もしない
           if (j.fallback) { viaTalk(); return; }   // 送信数の上限などで届けられなかったとき
           failed(j.error || 'error');
         })
         .catch(function () {
-          // 受け取ってもらえたあとに画面を閉じられなかっただけのときは、トークに送り直さない
-          // （送り直すと、台帳に同じ出張が2行立ってしまう）
-          if (!accepted) viaTalk();
+          clearTimeout(timer);
+          // 受け取ってもらえたか分からないまま送り直すと、台帳に同じ出張が2行立つ。
+          // まだ閉じていないときだけ、従来の送り方に切り替える
+          if (!answered && !closed) viaTalk();
         });
     };
     $('form').classList.remove('hide');

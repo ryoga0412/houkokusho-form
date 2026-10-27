@@ -480,7 +480,7 @@
 
   function addLeg(row) {
     var w = $('tpl_leg').content.firstElementChild.cloneNode(true);
-    bindSeg(w.querySelector('.pay'));
+    bindSeg(w.querySelector('.pay'), function () { routeVis(w); });
     var d = bindField(w.querySelector('.l-date'), 'one', '利用日を選ぶ');
     var mean = w.querySelector('.l-mean');
     bindSeg(mean, function (m) {
@@ -508,10 +508,19 @@
   }
 
   /* 区間の手段に合わせて、明細の出し分け・便名の例・座席クラスの選択肢を入れ替える */
+  /* 発着を出すか。飛行機・新幹線は必ず出す。在来線・車は「個人」で立て替えたときだけ */
+  function routeVis(w) {
+    var m = segVal(w.querySelector('.l-mean'));
+    var pay = segVal(w.querySelector('.pay'));
+    var show = !!m && (!!CLS[m] || pay === '個人');
+    w.querySelector('.l-route').classList.toggle('hide', !show);
+    return show;
+  }
+
   function refreshLeg(w) {
     var m = segVal(w.querySelector('.l-mean')), list = CLS[m];
     w.querySelector('.l-air').classList.toggle('hide', !list);     // 利用日・便名・座席は飛行機と新幹線だけ
-    w.querySelector('.l-route').classList.toggle('hide', !m);      // 発着はどの手段でも
+    routeVis(w);
     w.querySelector('.l-pay').classList.toggle('hide', !m);        // 支払もどの手段でも
     w.querySelector('.l-opt').classList.toggle('hide', !!list);    // 飛行機・新幹線のときだけ必須
     if (w.parentNode) renumberSubs(w.parentNode, '移動');
@@ -565,7 +574,8 @@
   function roundTrip(row, w) {
     var btn = w.querySelector('.l-rt'), label = '⇄ 往復にする（帰りを自動入力）';
     var fr = w.querySelector('.l-from'), to = w.querySelector('.l-to');
-    if (!val(fr.value) || !val(to.value)) {
+    var needRoute = !w.querySelector('.l-route').classList.contains('hide');
+    if (needRoute && (!val(fr.value) || !val(to.value))) {
       if (!val(fr.value)) fr.classList.add('bad');
       if (!val(to.value)) to.classList.add('bad');
       btn.textContent = '先に移動①の発着を入れてください';
@@ -589,6 +599,7 @@
     var c = segVal(w.querySelector('.l-cls'));
     if (c) { setSeg(back.querySelector('.l-cls'), c); back.querySelector('.l-cls').classList.add('auto'); }
     setSeg(back.querySelector('.pay'), segVal(w.querySelector('.pay')));
+    routeVis(back);   // 支払が法人などなら、帰りの発着も隠す
 
     var bf = back.querySelector('.l-from'), bt = back.querySelector('.l-to');
     bf.value = val(to.value); bt.value = val(fr.value);
@@ -784,7 +795,8 @@
         if (!CLS[m]) {
           var p0 = segVal(w.querySelector('.pay'));
           var f0 = val(w.querySelector('.l-from').value), t0 = val(w.querySelector('.l-to').value);
-          var route = (f0 || t0) ? ' ' + f0 + '→' + t0 : '';   // 発着は任意。書いてあれば載せる
+          var vis = !w.querySelector('.l-route').classList.contains('hide');
+          var route = (vis && (f0 || t0)) ? ' ' + f0 + '→' + t0 : '';   // 隠れているときは載せない
           legs.push({ k: '', m: m, pay: p0, route: route, s: m + route + '　／ ' + p0 });
           return;
         }   // 在来線・車は手段だけ

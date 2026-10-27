@@ -259,6 +259,10 @@
       <span class="fl">支払</span>
       <div class="seg pay"><button type="button" class="on" data-v="個人">個人</button><button type="button" data-v="法人">法人</button><button type="button" data-v="支払なし">支払なし</button></div>
     </div>
+    <div class="l-fare hide">
+      <span class="fl">金額</span>
+      <input type="text" class="l-amt" inputmode="numeric" placeholder="ガソリン代・ETC代">
+    </div>
     <button type="button" class="rt l-rt hide">⇄ 往復にする（帰りを自動入力）</button>
   </div>
 </template>
@@ -371,7 +375,7 @@
     var list = getDates(el), k = el.getAttribute('data-kind');
     el.classList.toggle('empty', !list.length);
     if (!list.length) el.textContent = el.getAttribute('data-ph');
-    else if (k === 'one') el.textContent = jp(list[0]) + wd(list[0]);
+    else if (k === 'one') el.textContent = jp(list[0]);   // 欄が狭いので曜日は出さない
     else el.textContent = datesShort(list) + (list.length > 1 ? '（' + list.length + '日）' : '');
   }
   function bindField(el, kind, ph) {
@@ -537,8 +541,11 @@
   function routeVis(w) {
     var m = segVal(w.querySelector('.l-mean'));
     var pay = segVal(w.querySelector('.pay'));
-    var show = !!m && (!!CLS[m] || pay === '個人');
+    var personal = (pay === '個人');
+    var show = !!m && (!!CLS[m] || personal);
     w.querySelector('.l-route').classList.toggle('hide', !show);
+    // 在来線・車を自分で立て替えたときだけ、金額を聞く
+    w.querySelector('.l-fare').classList.toggle('hide', !(m && !CLS[m] && personal));
     return show;
   }
 
@@ -558,7 +565,10 @@
       w.querySelector('.l-to').placeholder = ph[1];
       drawChips(w, m);
     }
-    if (!list) return;
+    if (!list) {
+      w.querySelector('.l-amt').placeholder = (m === '車') ? 'ガソリン代・ETC代' : '運賃';
+      return;
+    }
     var cls = w.querySelector('.l-cls'), cur = segVal(cls);
     cls.innerHTML = '';
     var head = document.createElement('option');
@@ -826,7 +836,10 @@
           var f0 = val(w.querySelector('.l-from').value), t0 = val(w.querySelector('.l-to').value);
           var vis = !w.querySelector('.l-route').classList.contains('hide');
           var route = (vis && (f0 || t0)) ? ' ' + f0 + '→' + t0 : '';   // 隠れているときは載せない
-          legs.push({ k: '', m: m, pay: p0, route: route, s: m + route + '　／ ' + p0 });
+          var amtVis = !w.querySelector('.l-fare').classList.contains('hide');
+          var amt = val(w.querySelector('.l-amt').value).replace(/円$/, '');
+          var money = (amtVis && amt) ? ' ' + amt + '円' : '';
+          legs.push({ k: '', m: m, pay: p0, route: route, money: money, s: m + route + money + '　／ ' + p0 });
           return;
         }   // 在来線・車は手段だけ
         var d = w.querySelector('.l-date'), nm = w.querySelector('.l-name'), cls = w.querySelector('.l-cls');
@@ -861,7 +874,8 @@
       var hasDetail = legs.some(function (x) { return x.detail; });
       var samePay = legs.length > 0 && legs.every(function (x) { return x.pay === legs[0].pay; });
       var noRoute = legs.every(function (x) { return !x.route; });
-      if (!hasDetail && samePay && noRoute) {
+      var noMoney = legs.every(function (x) { return !x.money; });
+      if (!hasDetail && samePay && noRoute && noMoney) {
         L.push('移動手段：' + legs.map(function (x) { return x.m; }).filter(function (v, j, a) { return a.indexOf(v) === j; }).join('・')
                + '　／ ' + legs[0].pay);
       } else {

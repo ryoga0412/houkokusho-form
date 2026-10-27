@@ -114,6 +114,10 @@
   #cal_cancel{background:#EEF1EF;color:#56655C}
   #cal_ok{background:var(--brand);color:#fff}
   #cal_ok:disabled{background:#A9BFB4}
+  /* 横に2つ並べる */
+  .duo{display:flex;gap:9px}
+  .duo>div{flex:1;min-width:0}
+
   /* 会社名・出張者（複数行） */
   .who{display:flex;gap:7px;align-items:center;margin-bottom:7px}
   .who input{flex:1;min-width:0}
@@ -214,21 +218,33 @@
 <template id="tpl_leg">
   <div class="sub">
     <div class="sub-h"><b class="l-no"></b><button type="button" class="l-del">削除</button></div>
-    <span class="fl">手段</span>
-    <select class="l-mean empty">
-      <option value="">選んでください</option>
-      <option value="飛行機">飛行機</option>
-      <option value="新幹線">新幹線</option>
-      <option value="在来線">在来線</option>
-      <option value="車">車</option>
-    </select>
+    <div class="duo">
+      <div>
+        <span class="fl">手段</span>
+        <select class="l-mean empty">
+          <option value="">選んでください</option>
+          <option value="飛行機">飛行機</option>
+          <option value="新幹線">新幹線</option>
+          <option value="在来線">在来線</option>
+          <option value="車">車</option>
+        </select>
+      </div>
+      <div class="l-day hide">
+        <span class="fl">利用日</span>
+        <button type="button" class="dfield empty l-date"></button>
+      </div>
+    </div>
     <div class="l-air hide">
-      <span class="fl">利用日</span>
-      <button type="button" class="dfield empty l-date"></button>
-      <span class="fl">便名</span>
-      <input type="text" class="l-name">
-      <span class="fl">座席クラス</span>
-      <select class="l-cls empty"></select>
+      <div class="duo">
+        <div>
+          <span class="fl">便名</span>
+          <input type="text" class="l-name">
+        </div>
+        <div>
+          <span class="fl">座席クラス</span>
+          <select class="l-cls empty"></select>
+        </div>
+      </div>
     </div>
     <div class="l-route hide">
       <span class="fl">発着 <em class="l-opt">／ 分かれば</em></span>
@@ -426,7 +442,10 @@
     if (!first) return;
     each(row.querySelector('.r-legs').children, function (w) {
       var d = w.querySelector('.l-date');
-      if (!d.getAttribute('data-touched')) setDates(d, [first]);
+      if (!d.getAttribute('data-touched')) {
+        setDates(d, [first]);
+        d.classList.add('auto');   // 出張日から引っ張ってきた印
+      }
     });
   }
 
@@ -506,7 +525,10 @@
     row.querySelector('.r-legs').appendChild(w);
     renumberSubs(row.querySelector('.r-legs'), '移動');
     var first = getDates(row.querySelector('.r-dates'))[0];
-    if (first) setDates(d, [first]);   // 日帰りなので、行きも帰りも出張日を入れておく（手で変えられる）
+    if (first) {
+      setDates(d, [first]);
+      d.classList.add('auto');   // 出張日から引っ張ってきた印
+    }   // 日帰りなので、行きも帰りも出張日を入れておく（手で変えられる）
     return w;
   }
 
@@ -522,7 +544,8 @@
 
   function refreshLeg(w) {
     var m = segVal(w.querySelector('.l-mean')), list = CLS[m];
-    w.querySelector('.l-air').classList.toggle('hide', !list);     // 利用日・便名・座席は飛行機と新幹線だけ
+    w.querySelector('.l-air').classList.toggle('hide', !list);
+    w.querySelector('.l-day').classList.toggle('hide', !list);   // 利用日も飛行機・新幹線だけ     // 利用日・便名・座席は飛行機と新幹線だけ
     var payBox = w.querySelector('.pay');
     if (m && !payBox.getAttribute('data-touched')) setSeg(payBox, CLS[m] ? '個人' : '法人');
     routeVis(w);

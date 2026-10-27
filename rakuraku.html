@@ -480,7 +480,10 @@
 
   function addLeg(row) {
     var w = $('tpl_leg').content.firstElementChild.cloneNode(true);
-    bindSeg(w.querySelector('.pay'), function () { routeVis(w); });
+    bindSeg(w.querySelector('.pay'), function () {
+      w.querySelector('.pay').setAttribute('data-touched', '1');   // 手で選んだら、もう勝手に変えない
+      routeVis(w);
+    });
     var d = bindField(w.querySelector('.l-date'), 'one', '利用日を選ぶ');
     var mean = w.querySelector('.l-mean');
     bindSeg(mean, function (m) {
@@ -520,6 +523,8 @@
   function refreshLeg(w) {
     var m = segVal(w.querySelector('.l-mean')), list = CLS[m];
     w.querySelector('.l-air').classList.toggle('hide', !list);     // 利用日・便名・座席は飛行機と新幹線だけ
+    var payBox = w.querySelector('.pay');
+    if (m && !payBox.getAttribute('data-touched')) setSeg(payBox, CLS[m] ? '個人' : '法人');
     routeVis(w);
     w.querySelector('.l-pay').classList.toggle('hide', !m);        // 支払もどの手段でも
     w.querySelector('.l-opt').classList.toggle('hide', !!list);    // 飛行機・新幹線のときだけ必須
@@ -599,6 +604,7 @@
     var c = segVal(w.querySelector('.l-cls'));
     if (c) { setSeg(back.querySelector('.l-cls'), c); back.querySelector('.l-cls').classList.add('auto'); }
     setSeg(back.querySelector('.pay'), segVal(w.querySelector('.pay')));
+    back.querySelector('.pay').setAttribute('data-touched', '1');
     routeVis(back);   // 支払が法人などなら、帰りの発着も隠す
 
     var bf = back.querySelector('.l-from'), bt = back.querySelector('.l-to');

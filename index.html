@@ -386,11 +386,11 @@ body { background: #fff; }
     <!-- 旅費申請を送ったあとに出す -->
     <div class="hide" id="next">
       <div class="donebox">
-        <b>続けて出張報告も書けます。</b>
-        <p>いま書いていただくと、旅費精算書と出張報告書を<br>ひとまとめにしてお作りします。<br>あとからLINEで書いていただいても大丈夫です。</p>
+        <b>旅費申請を受け付けました。</b>
+        <p>このまま出張報告も書けます。<br>あとからLINEで書いていただいても大丈夫です。</p>
       </div>
       <button type="button" class="submit" id="goReport">続けて出張報告を書く</button>
-      <button type="button" class="add" id="later">あとで書く（旅費申請だけ送る）</button>
+      <button type="button" class="add" id="later">あとで書く</button>
     </div>
 
     <button type="button" class="submit" id="send">この内容で送る</button>
@@ -1047,7 +1047,7 @@ body { background: #fff; }
       if ($('r_note')) $('r_note').classList.remove('hide');
       window.scrollTo(0, 0);
     }
-    /* 旅費申請の画面に戻る。送るのは最後にまとめてなので、ここでは送るボタンを出さない */
+    /* 旅費申請の画面に戻る。もう送ってあるので、送るボタンは出さない */
     function toExpense() {
       $('report').classList.add('hide');
       $('expense').classList.remove('hide');
@@ -1061,84 +1061,71 @@ body { background: #fff; }
     $('goReport').onclick = toReport;
     $('ctx').onclick = function () { if ($('ctx').classList.contains('back')) toExpense(); };
 
-    /* 旅費申請の本文を、ここで預かっておく。
-       出張報告まで書いてもらえたら、2つまとめて1通で送る（カードも1枚になる）。 */
-    var pending = '';
     var sending = false;
     function chParam() { return (new URLSearchParams(location.search).get('ch') || ''); }
-    function body(text, id) {
+    function body(text, id, quiet) {
       var t = '';
       try { t = liff.getAccessToken() || ''; } catch (e) { }
-      return JSON.stringify({ type: 'ai_form', id: id, accessToken: t, text: text, ch: chParam() });
+      return JSON.stringify({ type: 'ai_form', id: id, accessToken: t, text: text,
+                              ch: chParam(), quiet: !!quiet });
     }
 
-    function sendText(text) {
+    /* opts.next … 送ったあと、続きの画面へ進む（閉じない）
+       opts.quiet … 受付側でカードを出さない（旅費申請のときに1枚出しているため） */
+    function sendText(text, opts) {
+      opts = opts || {};
       if (sending) return;
       sending = true;
-      pending = '';
       $('send').disabled = true;
       $('send').textContent = '送信中…';
       var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   // 二重送信よけの目印
-      var closed = false;
-      function bye() { if (!closed) { closed = true; liff.closeWindow(); } }
+      var moved = false, closed = false;
+      function done() {
+        if (opts.next) { if (!moved) { moved = true; sending = false; toNext(); } return; }
+        if (!closed) { closed = true; liff.closeWindow(); }
+      }
       // 受付の返事は待たない。カードはトークに届くので、ここで待たせない。
       // つながらない失敗は1秒以内に分かるので、1.2秒だけ待つ。
-      var timer = setTimeout(bye, 1200);
+      var timer = setTimeout(done, 1200);
       fetch(EXEC_URL, {
         method: 'POST',
         keepalive: true,   // 画面を閉じたあとも送信は続く
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: body(text, id)
+        body: body(text, id, opts.quiet)
       })
         .then(function (res) { return res.json(); })
         .then(function (j) {
           clearTimeout(timer);
-          if (j.ok) { bye(); return; }
-          if (j.fallback) { viaTalk(text); return; }   // 送信数の上限が近いときなど
-          if (closed) return;
+          if (j.ok) { done(); return; }
+          if (j.fallback) { viaTalk(text, !!opts.next); return; }   // 送信数の上限が近いときなど
+          if (closed || moved) return;
           sending = false;
           failed(j.error || 'error');
         })
         .catch(function () {
           clearTimeout(timer);
-          if (closed) return;
-          viaTalk(text);   // 受付先につながらないとき
+          if (closed || moved) return;
+          viaTalk(text, !!opts.next);   // 受付先につながらないとき
         });
     }
 
-    $('later').onclick = function () {
-      if (!pending) { bye2(); return; }
-      if (PREVIEW) { console.log(pending); show('プレビューのため送信していません。'); return; }
-      sendText(pending);
-    };
+    $('later').onclick = function () { bye2(); };
 
     $('send').onclick = function () {
       if (mode !== 'report') {
         var r = expenseText();
         if (r.err) { alert(r.err); return; }
-        remember();        // 次回のために、使った場所をこの端末に覚えておく
-        pending = r.text;  // まだ送らない。報告まで書いてもらえるか聞く
-        toNext();
+        remember();   // 次回のために、使った場所をこの端末に覚えておく
+        if (PREVIEW) { console.log(r.text); toNext(); return; }
+        sendText(r.text, { next: true });   // 送ったうえで、続きの画面へ
         return;
       }
       var rr = reportText();
       if (rr.err) { alert(rr.err); return; }
-      var text = pending ? (pending + '\n\n' + rr.text) : rr.text;
-      if (PREVIEW) { console.log(text); show('プレビューのため送信していません。'); return; }
-      sendText(text);
+      if (PREVIEW) { console.log(rr.text); show('プレビューのため送信していません。'); return; }
+      // AIの質問が不要なときは、カードを出さない（旅費申請のときに1枚出している）
+      sendText(rr.text, { quiet: (rAi === 'off') });
     };
-
-    /* 報告を書かずに画面を閉じられても、旅費申請だけは届くようにする */
-    window.addEventListener('pagehide', function () {
-      if (!pending || sending) return;
-      var text = pending;
-      pending = '';
-      try {
-        fetch(EXEC_URL, { method: 'POST', keepalive: true,
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: body(text, 'x' + Date.now().toString(36)) });
-      } catch (e) { }
-    });
   }).catch(function (e) { show('起動に失敗しました。（' + e + '）'); });
 })();
 </script>

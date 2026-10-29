@@ -48,7 +48,9 @@
   .duo{display:flex;gap:9px}
   .duo>div{flex:1;min-width:0}
   .duo .mini+*{margin-top:4px}
-  .duo .dfield{width:100%}
+  .duo .dfield{width:100%;padding:9px 28px 9px 11px;white-space:nowrap;overflow:hidden}
+  .duo .dfield:after{right:11px}
+  .duo .dfield:before{right:13px}
   .s-top .meanwrap, .s-air .clswrap{margin:0}
   .two{display:flex;gap:9px;align-items:center}
   .two>*{flex:1;min-width:0}
@@ -68,6 +70,12 @@
   .seg2 div{flex:1;text-align:center;padding:11px 6px;font-size:13.5px;
             color:#56655C;cursor:pointer;user-select:none}
   .seg2 div.on{background:var(--brand);color:#fff;font-weight:700}
+  /* 支払と同じ、小さな丸ボタン */
+  .seg2.pill2{display:inline-flex;gap:6px;border:none;background:none;border-radius:0;
+              overflow:visible;width:auto}
+  .seg2.pill2 div{flex:none;border:1px solid var(--line);background:var(--white);color:#56655C;
+                  border-radius:15px;padding:5px 15px;font-size:13px;line-height:1.5}
+  .seg2.pill2 div.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
   /* 手段・座席クラス・支払（タップで選ぶ） */
   .segb{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--white)}
   .segb button{flex:1;border:none;background:none;padding:10px 2px;font-size:13.5px;font-family:inherit;
@@ -102,6 +110,12 @@
          font-size:12.5px;font-weight:700;color:var(--brand)}
   .day textarea{border:none;border-radius:0;min-height:76px}
   .hide{display:none !important}
+  /* 旅費申請を送ったあと、続けて報告を書くかどうか */
+  .donebox{background:var(--white);border:1px solid var(--line);border-radius:14px;
+           padding:20px 18px;margin-bottom:14px;text-align:center}
+  .donebox b{display:block;font-size:16px;margin-bottom:6px}
+  .donebox p{font-size:13px;color:var(--dim);line-height:1.8}
+  #later{display:block;width:100%;text-align:center;margin-top:2px}
   .submit{width:100%;background:var(--brand);color:#fff;border:none;border-radius:10px;
           padding:15px;font-size:16px;font-weight:700;font-family:inherit;margin-top:28px;cursor:pointer}
   .submit:disabled{background:#A9BFB4}
@@ -140,16 +154,19 @@
   #cal_ok:disabled{background:#A9BFB4}
 
 /* ===== 旅費申請 2026-10 改訂 ===== */
-#expense input[type=text], #expense .dfield, #expense select { min-height: 52px; font-size: 16px; border-radius: 12px; }
+#expense input[type=text], #expense .dfield, #expense select { min-height: 46px; font-size: 16px; border-radius: 11px; padding-top: 9px; padding-bottom: 9px; }
 #report input[type=text], #report textarea { font-size: 16px; border-radius: 12px; padding: 13px 15px; }
-#report textarea { min-height: 104px; line-height: 1.75; }
-#report input[type=text] { min-height: 52px; }
+#report textarea { min-height: 120px; line-height: 1.75; }
+#report textarea#r_all { min-height: 148px; }
+/* 例文は、打ち込む文字より小さくして、例だと分かるようにする */
+#report textarea::placeholder { font-size: 13.5px; line-height: 1.7; }
+#report input[type=text] { min-height: 46px; padding-top: 9px; padding-bottom: 9px; }
 #expense .segb button { min-height: 44px; font-size: 14px; border-radius: 10px; }
 #expense .card { border-radius: 14px; }
 /* 手段を選ぶまで、下の入力欄は出さない */
 #e_segs .card.pending > *:not(.card-h):not(.s-top) { display: none !important; }
-.xbox { background: #fff; border: 1px solid #E4E8E6; border-radius: 14px; padding: 14px; margin: 0 0 14px; }
-.xlab { font-size: 12px; color: #6E7B74; font-weight: 700; letter-spacing: .06em; margin: 14px 0 8px; }
+.xbox { background: #fff; border: 1px solid #E4E8E6; border-radius: 14px; padding: 12px 12px 9px; margin: 0 0 12px; }
+.xlab { font-size: 12px; color: #6E7B74; font-weight: 700; letter-spacing: .06em; margin: 11px 0 6px; }
 .xlab:first-child { margin-top: 0; }
 .xbox input[type=text], .xbox select { width: 100%; }
 .xbox .dfield { width: 100%; }
@@ -171,12 +188,12 @@
 
 
 /* 写真の添付（証憑） */
-.phwrap { margin-top: 12px; }
-.phbtn { width: 100%; height: 50px; border: 1.5px dashed #C9D4CE; border-radius: 12px; background: #fff;
-  color: #0A7A45; font-size: 14px; font-weight: 700; font-family: inherit;
+.phwrap { margin-top: 3px; }
+.phbtn { width: 100%; height: 42px; border: 1.5px dashed #C9D4CE; border-radius: 11px; background: #fff;
+  color: #0A7A45; font-size: 13px; font-weight: 700; font-family: inherit;
   display: flex; align-items: center; justify-content: center; gap: 7px; }
-.phs { display: flex; gap: 10px; flex-wrap: wrap; }
-.phs .t { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+.phs { display: flex; gap: 9px; flex-wrap: wrap; }
+.phs .t { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
 .phs .t .im { display: block; width: 100%; height: 100%; border-radius: 10px; background: #DCE4E0; object-fit: cover; }
 .phs .t .rm { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%;
   background: #fff; border: 1px solid #E4E8E6; font-size: 12px; color: #6E7B74;
@@ -186,10 +203,10 @@
   font-size: 11px; font-weight: 700; color: #6E7B74; }
 .phs .t.done .st { display: none; }
 .phs .t.ng .st { background: rgba(192,57,43,.16); color: #C0392B; }
-.phs .more { width: 64px; height: 64px; border-radius: 10px; border: 1.5px dashed #C9D4CE; background: #fff;
-  color: #0A7A45; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.phs .more { width: 56px; height: 56px; border-radius: 10px; border: 1.5px dashed #C9D4CE; background: #fff;
+  color: #0A7A45; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 /* 海外便の見積り */
-.ask2 { width: 100%; height: 52px; border: 1.5px solid #E4E8E6; border-radius: 12px; background: #fff;
+.ask2 { width: 100%; height: 46px; border: 1.5px solid #E4E8E6; border-radius: 12px; background: #fff;
   color: #141A17; font-size: 14.5px; font-weight: 700; font-family: inherit; margin-top: 10px; }
 .fee { font-size: 11.5px; color: #6E7B74; margin: 7px 0 0; text-align: center; }
 .asked { display: flex; align-items: center; gap: 10px; background: #0A7A45; border-radius: 12px;
@@ -216,7 +233,7 @@
 .meanwrap { position: relative; margin: 0 0 10px; }
 .meanwrap::after { content: '▾'; position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
   color: #6E7B74; font-size: 13px; pointer-events: none; }
-.meanwrap select { width: 100%; min-height: 52px; border: 1.5px solid #E4E8E6; background: #fff;
+.meanwrap select { width: 100%; min-height: 46px; border: 1.5px solid #E4E8E6; background: #fff;
   border-radius: 12px; padding: 0 38px 0 15px; font-size: 16px; font-weight: 400; color: #9AA6A0;
   font-family: inherit; appearance: none; -webkit-appearance: none; }
 .meanwrap select.pick { border-color: #0A7A45; color: #141A17; }
@@ -226,27 +243,27 @@
 .clswrap.hide { display: none !important; }
 .clswrap::after { content: '▾'; position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
   color: #6E7B74; font-size: 13px; pointer-events: none; }
-.clswrap select { width: 100%; min-height: 48px; border: 1.5px solid #E4E8E6; background: #fff;
+.clswrap select { width: 100%; min-height: 46px; border: 1.5px solid #E4E8E6; background: #fff;
   border-radius: 12px; padding: 0 38px 0 14px; font-size: 16px; font-weight: 400; color: #9AA6A0;
   font-family: inherit; appearance: none; -webkit-appearance: none; }
 .clswrap select.pick { border-color: #0A7A45; color: #141A17; }
 .farewrap { margin-top: 12px; }
 .farewrap .fl2 { font-size: 12px; color: #6E7B74; font-weight: 700; letter-spacing: .06em; margin: 0 0 8px; }
-.farewrap .yen2 { display: flex; align-items: center; gap: 9px; min-height: 52px; background: #fff;
+.farewrap .yen2 { display: flex; align-items: center; gap: 9px; min-height: 46px; background: #fff;
   border: 1.5px solid #E4E8E6; border-radius: 12px; padding: 0 14px; }
 .farewrap .yen2 i { font-style: normal; color: #9AA6A0; font-size: 16px; }
 .farewrap .yen2 input { flex: 1; border: 0; outline: 0; font-size: 17px; font-family: inherit;
-  background: none; min-height: 48px; }
+  background: none; min-height: 44px; }
 .farewrap .yen2 b { font-weight: 600; color: #6E7B74; font-size: 14px; }
 
 /* ===== 案B：まとまりを浮かぶカードに、上に進み具合 ===== */
 body { background: #E9EDEB; }
 #expense .bsec, #report .bsec, #x_burden, #e_staybox {
-  background: #fff; border-radius: 18px; padding: 16px 15px 14px; margin: 0 0 14px;
+  background: #fff; border-radius: 18px; padding: 14px 14px 12px; margin: 0 0 12px;
   box-shadow: 0 2px 10px rgba(20,26,23,.08); border-left: 4px solid #0A7A45; }
 #expense .bsec > .fl, #report .bsec > .fl, #x_burden > .fl, #e_staybox > .fl {
-  font-size: 16px; font-weight: 800; letter-spacing: .03em; color: #141A17;
-  margin: 0 0 13px; display: flex; align-items: center; width: 100%; }
+  font-size: 15.5px; font-weight: 800; letter-spacing: .03em; color: #141A17;
+  margin: 0 0 10px; display: flex; align-items: center; width: 100%; }
 #expense .bsec > .fl .xcv, #report .bsec > .fl .xcv { margin-left: auto; color: #9AA6A0; font-size: 12px; }
 #e_staybox .card { background: #FBFCFB; }
 /* 枠の中の枠は軽く */
@@ -340,24 +357,21 @@ body { background: #E9EDEB; }
     <div id="report" class="hide">
       <span class="fl">書き方</span>
       <div class="seg2" id="r_mode">
-        <div class="on" data-v="day">日ごとに報告</div>
-        <div data-v="all">まとめて報告</div>
+        <div data-v="day">日ごとに報告</div>
+        <div class="on" data-v="all">まとめて報告</div>
       </div>
 
-      <span class="fl">目的</span>
-      <input type="text" id="r_purpose" placeholder="未入力の場合は下の内容から作成します">
-
-      <span class="fl" id="r_bodylabel">日ごとの出張内容</span>
-      <div id="r_days"></div>
-      <textarea id="r_all" class="hide" placeholder="〇〇社との打合せ、現場の立会い　など"></textarea>
+      <span class="fl" id="r_bodylabel">出張内容</span>
+      <div id="r_days" class="hide"></div>
+      <textarea id="r_all" placeholder="〇〇株式会社を訪問し、△△部長と新単価について打合せ&#10;□□工場では現場を確認し、工程の遅れと原因を確認&#10;帰りに△△商事へ立ち寄り、次回の納期を調整"></textarea>
 
       <span class="fl">決まったこと・成果</span>
-      <textarea id="r_result" placeholder="単価改定は4月から／見積りは今月中に受領　など"></textarea>
+      <textarea id="r_result" placeholder="新単価は4月1日からの適用で合意&#10;見積りは今月中に先方から受領&#10;次回は現場で仕様を再確認（11月上旬）"></textarea>
 
       <span class="fl">AIによる申請サポート</span>
-      <div class="seg2" id="r_ai">
-        <div class="on" data-v="on">必要</div>
-        <div data-v="off">不要</div>
+      <div class="seg2 pill2" id="r_ai">
+        <div data-v="on">必要</div>
+        <div class="on" data-v="off">不要</div>
       </div>
       <div class="hint" style="text-align:left;margin-top:6px">
         ＊より詳細な出張報告を作成するために、AIが質問します。
@@ -367,8 +381,18 @@ body { background: #E9EDEB; }
       <div class="phwrap" id="r_photo" data-btn="写真を添付"></div>
     </div>
 
+    <!-- 旅費申請を送ったあとに出す -->
+    <div class="hide" id="next">
+      <div class="donebox">
+        <b>旅費申請を受け付けました。</b>
+        <p>このまま出張報告も書けます。<br>あとからLINEで書いていただいても大丈夫です。</p>
+      </div>
+      <button type="button" class="submit" id="goReport">続けて出張報告を書く</button>
+      <button type="button" class="add" id="later">あとで書く</button>
+    </div>
+
     <button type="button" class="submit" id="send">この内容で送る</button>
-    <div class="hint" id="r_note">送信後、足りないところだけLINEでお伺いします。</div>
+    <div class="hint" id="r_note">いただいた内容だけで報告書をお作りします。</div>
   </main>
 </div>
 
@@ -479,6 +503,10 @@ body { background: #E9EDEB; }
     var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
     return m ? m[1] + '年' + Number(m[2]) + '月' + Number(m[3]) + '日' : '';
   }
+  function mdOnly(iso) {
+    var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? Number(m[2]) + '月' + Number(m[3]) + '日' : '';
+  }
   function md(iso) {
     var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!m) return '';
@@ -504,6 +532,7 @@ body { background: #E9EDEB; }
     var f = el.getAttribute('data-from'), t = el.getAttribute('data-to');
     el.classList.toggle('empty', !f);
     if (!f) { el.textContent = el.getAttribute('data-ph') || '日付を選ぶ'; return; }
+    if (el.getAttribute('data-kind') === 'one') { el.textContent = mdOnly(f); return; }   // 欄が狭いので年は出さない
     if (!t || t === f) el.textContent = jp(f) + (el.getAttribute('data-kind') === 'trip' ? '（日帰り）' : '');
     else el.textContent = jp(f) + ' 〜 ' + jp(t);
   }
@@ -727,11 +756,17 @@ body { background: #E9EDEB; }
   function roundTrip(w) {
     var btn = w.querySelector('.s-rt'), label = '⇄ 往復にする（帰りを自動入力）';
     var fr = w.querySelector('.s-from'), to = w.querySelector('.s-to'), m = segVal(w.querySelector('.s-mean'));
-    if (!m || !esc(fr.value) || !esc(to.value)) {
+    /* 発着は、聞いているときだけ必要。法人払いの在来線などは聞いていない */
+    var rb = w.querySelector('.s-routebox');
+    var needRoute = !rb || !rb.classList.contains('hide');
+    var noRoute = needRoute && (!esc(fr.value) || !esc(to.value));
+    if (!m || noRoute) {
       if (!m) w.querySelector('.s-mean').classList.add('bad');
-      if (!esc(fr.value)) fr.classList.add('bad');
-      if (!esc(to.value)) to.classList.add('bad');
-      btn.textContent = '先に移動①の手段と発着を入れてください';
+      if (noRoute) {
+        if (!esc(fr.value)) fr.classList.add('bad');
+        if (!esc(to.value)) to.classList.add('bad');
+      }
+      btn.textContent = !m ? '先に移動①の手段を選んでください' : '先に移動①の発着を入れてください';
       setTimeout(function () { btn.textContent = label; }, 2200);
       return;
     }
@@ -870,8 +905,8 @@ body { background: #E9EDEB; }
   }
 
   /* ============ 出張報告 ============ */
-  var rMode = 'day';
-  var rAi = 'on';   // AIによる申請サポート。'on' = 必要 / 'off' = 不要
+  var rMode = 'all';   // 書き方の既定は「まとめて報告」
+  var rAi = 'off';   // AIによる申請サポート。'on' = 必要 / 'off' = 不要。既定は不要
 
   function buildReport() {
     $('title').textContent = '出張報告';
@@ -890,7 +925,7 @@ body { background: #E9EDEB; }
       var box = document.createElement('div');
       box.className = 'day';
       box.innerHTML = '<div class="day-h">' + (d ? md(d) : ('その日にされたこと ' + (i + 1))) + '</div>' +
-                      '<textarea placeholder="〇〇社との打合せ、現場の立会い　など"></textarea>';
+                      '<textarea placeholder="〇〇株式会社を訪問。△△部長と新単価について打合せ&#10;□□工場で現場を確認。工程の遅れと原因を確認"></textarea>';
       box.setAttribute('data-d', d ? md(d) : '');
       $('r_days').appendChild(box);
     });
@@ -930,9 +965,6 @@ body { background: #E9EDEB; }
     (window.__rTail || function () { return []; })().forEach(function (s) { L.push(s); });
     // 「不要」のときは目印を付ける。受け取った側が質問を飛ばす
     if (rAi === 'off') L.push('※質問不要');
-    var pur = esc($('r_purpose').value);
-    if (pur) L.push('目的：' + pur);
-
     var body = [];
     if (rMode === 'day') {
       Array.prototype.forEach.call($('r_days').children, function (box) {
@@ -971,29 +1003,64 @@ body { background: #E9EDEB; }
       show('送信できませんでした。もう一度お試しください。（' + e + '）');
     }
     /* 従来の送り方：トークに申請文を送る */
-    function viaTalk(text) {
+    function viaTalk(text, keepOpen) {
       liff.sendMessages([{ type: 'text', text: text }])
-        .then(function () { liff.closeWindow(); })
+        .then(function () { if (!keepOpen) liff.closeWindow(); })
         .catch(failed);
+    }
+
+    function bye2() { try { liff.closeWindow(); } catch (e) { show('この画面を閉じてください。'); } }
+
+    /* 旅費申請のあと、続けて出張報告を書けるようにする */
+    var moved = false;
+    function toNext() {
+      if (moved) return;
+      moved = true;
+      var rg = tripRange();
+      q.from = rg.from; q.to = rg.to; q.place = esc($('e_place').value);
+      $('expense').classList.add('hide');
+      $('send').classList.add('hide');
+      if ($('r_note')) $('r_note').classList.add('hide');
+      $('next').classList.remove('hide');
+      window.scrollTo(0, 0);
     }
 
     // 直し始めたら、自動入力の色と赤枠を消す
     document.addEventListener('input', function (e) { if (e.target.classList) e.target.classList.remove('bad', 'auto'); });
 
+    $('goReport').onclick = function () {
+      $('next').classList.add('hide');
+      mode = 'report';
+      buildReport();
+      $('send').disabled = false;
+      $('send').textContent = 'この内容で送る';
+      $('send').classList.remove('hide');
+      if ($('r_note')) $('r_note').classList.remove('hide');
+      window.scrollTo(0, 0);
+    };
+    $('later').onclick = function () { bye2(); };
+
     $('send').onclick = function () {
       var r = (mode === 'report') ? reportText() : expenseText();
       if (r.err) { alert(r.err); return; }
       if (mode !== 'report') remember();   // 次回のために、使った場所をこの端末に覚えておく
-      if (PREVIEW) { console.log(r.text); show('プレビューのため送信していません。'); return; }
+      if (PREVIEW) {
+        console.log(r.text);
+        if (mode !== 'report') { toNext(); return; }   // 確認用でも、続きの画面は見られるようにする
+        show('プレビューのため送信していません。');
+        return;
+      }
       $('send').disabled = true;
       $('send').textContent = '送信中…';
       /* 通常：受付先へ直接送る。トークに申請文は出さず、AIの返事だけが届く */
       var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   // 二重送信よけの目印
       var closed = false;
       function bye() { if (!closed) { closed = true; liff.closeWindow(); } }
-      // 受付の返事を待たずに画面を閉じる。カードはトークに届くので、ここで待たせない。
-      // つながらない失敗は1秒以内に分かるので、1.2秒だけ待ってから閉じる。
-      var timer = setTimeout(bye, 1200);
+      // 出張報告のときは閉じる。旅費申請のときは、続けて書ける画面に進む。
+      function done() { if (mode === 'report') bye(); else toNext(); }
+      // 受付の返事は待たない。カードはトークに届くので、ここで待たせない。
+      // つながらない失敗は1秒以内に分かるので、1.2秒だけ待つ。
+      var timer = setTimeout(done, 1200);
       fetch(EXEC_URL, {
         method: 'POST',
         keepalive: true,   // 画面を閉じたあとも送信は続く
@@ -1003,15 +1070,15 @@ body { background: #E9EDEB; }
         .then(function (res) { return res.json(); })
         .then(function (j) {
           clearTimeout(timer);
-          if (j.ok) { bye(); return; }
-          if (closed) return;
-          if (j.fallback) { viaTalk(r.text); return; }   // 送信数の上限が近いときなど
+          if (j.ok) { done(); return; }
+          if (j.fallback) { viaTalk(r.text, moved); return; }   // 送信数の上限が近いときなど
+          if (closed || moved) return;
           failed(j.error || 'error');
         })
         .catch(function () {
           clearTimeout(timer);
           if (closed) return;
-          viaTalk(r.text);   // 受付先につながらないとき
+          viaTalk(r.text, moved);   // 受付先につながらないとき
         });
     };
   }).catch(function (e) { show('起動に失敗しました。（' + e + '）'); });

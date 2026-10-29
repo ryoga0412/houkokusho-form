@@ -1006,10 +1006,13 @@ body { background: #fff; }
       $('send').textContent = 'この内容で送る';
       show('送信できませんでした。もう一度お試しください。（' + e + '）');
     }
-    /* 従来の送り方：トークに申請文を送る */
-    function viaTalk(text, keepOpen) {
-      liff.sendMessages([{ type: 'text', text: text }])
-        .then(function () { if (!keepOpen) liff.closeWindow(); })
+    /* 受付先が受け取れないときの逃げ道：トークに申請文をそのまま流す。
+       利用者自身のLINEから送るので、会社のLINEの送信通数を使わない。 */
+    function viaTalk(text, report) {
+      var ms = [{ type: 'text', text: text }];
+      if (report) ms.push({ type: 'text', text: report });
+      liff.sendMessages(ms)
+        .then(function () { liff.closeWindow(); })
         .catch(failed);
     }
 
@@ -1097,7 +1100,7 @@ body { background: #fff; }
         .then(function (j) {
           clearTimeout(timer);
           if (j.ok) { bye(); return; }
-          if (j.fallback) { viaTalk(text); return; }   // 送信数の上限が近いときなど
+          if (j.fallback) { viaTalk(text, report); return; }   // 送信数の上限が近いときなど
           if (closed) return;
           sending = false;
           failed(j.error || 'error');
@@ -1105,7 +1108,7 @@ body { background: #fff; }
         .catch(function () {
           clearTimeout(timer);
           if (closed) return;
-          viaTalk(text);   // 受付先につながらないとき
+          viaTalk(text, report);   // 受付先につながらないとき
         });
     }
 

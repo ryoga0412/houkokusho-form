@@ -1309,12 +1309,9 @@ body { background: #fff; }
     return out;
   };
   window.__rTail = function () {
-    var out = [];
     var w = $('r_photo');
-    if (w && w.querySelectorAll('.phs .t.done').length) {
-      out.push('証憑：' + w.querySelectorAll('.phs .t.done').length + '件　' + FOLDER);
-    }
-    return out;
+    if (!w || !window.__photoLines) return [];
+    return window.__photoLines(w.querySelectorAll('.phs .t.done'));
   };
   window.__xTail = function () {
     var out = [];
@@ -1373,6 +1370,19 @@ body { background: #fff; }
   })();
   var REQ = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   var FOLDER = '';
+
+  /* 添付した写真を1枚ずつリンクで並べる。申請文に入れて台帳へ渡す */
+  window.__photoLines = function (list) {
+    var out = [];
+    if (!list || !list.length) return out;
+    out.push('証憑：' + list.length + '件');
+    Array.prototype.forEach.call(list, function (t) {
+      var u = t.getAttribute('data-url');
+      if (u) out.push('・' + u);
+    });
+    if (FOLDER) out.push('証憑フォルダ：' + FOLDER);
+    return out;
+  };
   var asked = false;
 
   function token() { try { return (window.liff && liff.getAccessToken) ? (liff.getAccessToken() || '') : ''; } catch (e) { return ''; } }
@@ -1422,7 +1432,13 @@ body { background: #fff; }
         body: JSON.stringify({ type: 'upload', reqId: REQ, accessToken: token(), label: label, name: name, mime: mime, data: b64 })
       }).then(function (r) { return r.json(); })
         .then(function (j) {
-          if (j && j.ok) { if (j.folder) FOLDER = j.folder; t.classList.add('done'); }
+          if (j && j.ok) {
+            if (j.folder) FOLDER = j.folder;
+            // 1枚ごとのリンク。押すと中身が見える形にしておく
+            if (j.id) t.setAttribute('data-url', 'https://drive.google.com/file/d/' + j.id + '/view');
+            else if (j.url) t.setAttribute('data-url', j.url);
+            t.classList.add('done');
+          }
           else ng();
         })
         .catch(function () { ng(); });
@@ -1722,8 +1738,8 @@ body { background: #fff; }
     if (mi && mi.querySelectorAll('.phs .t.done').length) {
       o.push('海外便の見積り：添付あり（' + mi.querySelectorAll('.phs .t.done').length + '件）');
     }
-    var n = document.querySelectorAll('.phwrap .phs .t.done').length;
-    if (n) o.push('証憑：' + n + '件　' + FOLDER);
+    window.__photoLines(document.querySelectorAll('.phwrap .phs .t.done'))
+      .forEach(function (x) { o.push(x); });
     return o;
   };
 

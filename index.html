@@ -1371,6 +1371,39 @@ body { background: #fff; }
   var REQ = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   var FOLDER = '';
 
+  /* 添付のファイル名。20261107-20261108_横浜（株式会社インフォランス）_1
+     出張期間・出張先・会社名がまだ空のときは、もとの名前のままにする */
+  var PH_SEQ = 0;
+  function nameSafe(s) {
+    return String(s == null ? '' : s)
+      .replace(/[\\\/:*?"<>|\u0000-\u001f]/g, '')
+      .replace(/\s+/g, ' ').trim();
+  }
+  function ymd8(iso) {
+    var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? m[1] + m[2] + m[3] : '';
+  }
+  function photoTitle(label) {
+    var p = document.getElementById('e_period');
+    var f = p ? ymd8(p.getAttribute('data-from')) : '';
+    var t = p ? ymd8(p.getAttribute('data-to')) : '';
+    var day = f ? ((t && t !== f) ? (f + '-' + t) : f) : '';
+    var pl = document.getElementById('e_place');
+    var place = nameSafe(pl ? pl.value : '');
+    var cos = [];
+    var box = document.getElementById('x_cos');
+    if (box) Array.prototype.forEach.call(box.querySelectorAll('input'), function (i) {
+      var v = nameSafe(i.value);
+      if (v) cos.push(v);
+    });
+    var head = [day, place].filter(String).join('_');
+    if (cos.length) head += '（' + cos.join('・') + '）';
+    if (!head) return '';   // まだ書かれていない。もとの名前のままにする
+    if (label && label !== '証憑') head = nameSafe(label) + '_' + head;
+    PH_SEQ += 1;
+    return head.slice(0, 100) + '_' + PH_SEQ;
+  }
+
   /* 添付した写真を1枚ずつリンクで並べる。申請文に入れて台帳へ渡す */
   window.__photoLines = function (list) {
     var out = [];
@@ -1429,7 +1462,8 @@ body { background: #fff; }
       fetch(EXEC, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ type: 'upload', reqId: REQ, accessToken: token(), label: label, name: name, mime: mime, data: b64 })
+        body: JSON.stringify({ type: 'upload', reqId: REQ, accessToken: token(), label: label,
+                               name: name, title: photoTitle(label), mime: mime, data: b64 })
       }).then(function (r) { return r.json(); })
         .then(function (j) {
           if (j && j.ok) {
